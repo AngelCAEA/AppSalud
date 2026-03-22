@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: appsalud-app
+    container_name: appsalud-app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - laravel
+
+  db:
+    image: postgres:16
+    container_name: appsalud-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: appsalud
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: laravel
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - laravel
+            
+  nginx:
+    image: nginx:latest
+    container_name: tourcorridas-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+networks:
+  laravel:
+
+volumes:
+  pgdata:
