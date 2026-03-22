@@ -4,12 +4,20 @@ set -e
 # Generar APP_KEY si no existe
 php artisan key:generate --force
 
-# Limpiar y cachear configuración
+# Limpiar cachés
 php artisan config:clear
 php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
 
-# Correr migraciones (opcional, quita si no quieres auto-migrar)
+# Migraciones
 php artisan migrate --force
 
-# Arrancar Apache en foreground
+# Seeders (si necesitas datos de prueba)
+php artisan db:seed --force
+
+# Permisos
+chmod -R 775 storage bootstrap/cache
+
+# Arrancar Apache
 apache2-foreground
