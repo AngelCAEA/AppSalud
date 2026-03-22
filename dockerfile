@@ -25,4 +25,7 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 # Exponer el puerto de PHP-FPM
 EXPOSE 9000
 
-CMD ["php-fpm"]
+#CMD ["php-fpm"]
+
+# Comando para que Render detecte HTTP
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
