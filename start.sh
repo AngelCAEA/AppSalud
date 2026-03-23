@@ -3,7 +3,7 @@ set -e
 
 echo "==> Creando .env desde variables de entorno..."
 cat > /var/www/html/.env << EOF
-APP_NAME=Laravel
+APP_NAME=AppSalud
 APP_ENV=${APP_ENV:-production}
 APP_KEY=${APP_KEY:-}
 APP_DEBUG=${APP_DEBUG:-false}
