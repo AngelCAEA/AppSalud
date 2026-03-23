@@ -12,20 +12,16 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Dependencias PHP
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Dependencias JS y compilar (incluye SSR)
-RUN npm install && npm run build
+RUN npm ci && npm run build
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
 EXPOSE 8000
 
-CMD php artisan key:generate --force && \
-    php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan migrate --force && \
-    php artisan inertia:start-ssr & \
-    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD ["/usr/local/bin/start.sh"]
