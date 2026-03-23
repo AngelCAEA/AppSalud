@@ -21,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
     {
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
+            // Forzar que las cookies de sesión sean seguras
+            config(['session.secure' => true]);
+            config(['session.same_site' => 'none']);
         }
     }
 }
