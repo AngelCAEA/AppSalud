@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { User, LogOut } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
+import { usePage, router, Link } from '@inertiajs/react';
 import { logout } from '@/routes';
-import { Link } from '@inertiajs/react';
+
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -30,7 +30,7 @@ export function UserMenu() {
   const handleLogout = () => {
     console.log('Cerrar sesión');
     setIsOpen(false);
-    // Aquí puedes agregar la lógica de cerrar sesión
+    router.post(logout());
   };
 
   return (
