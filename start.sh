@@ -3,7 +3,7 @@ set -e
 
 echo "==> Creando .env desde variables de entorno..."
 cat > /var/www/html/.env << EOF
-APP_NAME=Laravel
+APP_NAME=AppSalud
 APP_ENV=${APP_ENV:-production}
 APP_KEY=${APP_KEY:-}
 APP_DEBUG=${APP_DEBUG:-false}
@@ -15,6 +15,9 @@ DB_PORT=${DB_PORT:-5432}
 DB_DATABASE=${DB_DATABASE}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
+
+TRUSTED_PROXIES=*
+TRUSTED_HOSTS=*
 
 SESSION_DRIVER=${SESSION_DRIVER:-cookie}
 SESSION_LIFETIME=120
