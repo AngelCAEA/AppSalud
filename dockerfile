@@ -10,11 +10,20 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Copiar primero solo los archivos necesarios para instalar dependencias
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY composer.json composer.lock ./
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# Copiar todo el proyecto
 COPY . .
 
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# Compilar assets DENTRO del contenedor
+RUN npm run build
 
-RUN npm ci && npm run build
+RUN composer run-script post-autoload-dump 2>/dev/null || true
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
