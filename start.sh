@@ -1,6 +1,30 @@
 #!/bin/bash
 set -e
 
+echo "==> Creando .env desde variables de entorno..."
+cat > /var/www/html/.env << EOF
+APP_NAME=Laravel
+APP_ENV=${APP_ENV:-production}
+APP_KEY=${APP_KEY:-}
+APP_DEBUG=${APP_DEBUG:-false}
+APP_URL=${APP_URL:-http://localhost}
+
+DB_CONNECTION=${DB_CONNECTION:-pgsql}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT:-5432}
+DB_DATABASE=${DB_DATABASE}
+DB_USERNAME=${DB_USERNAME}
+DB_PASSWORD=${DB_PASSWORD}
+
+SESSION_DRIVER=${SESSION_DRIVER:-cookie}
+SESSION_LIFETIME=120
+
+CACHE_DRIVER=${CACHE_DRIVER:-file}
+QUEUE_CONNECTION=${QUEUE_CONNECTION:-sync}
+
+VITE_APP_URL=${APP_URL:-http://localhost}
+EOF
+
 echo "==> Generando APP_KEY..."
 php artisan key:generate --force
 
@@ -17,4 +41,4 @@ echo "==> Iniciando SSR..."
 php artisan inertia:start-ssr &
 
 echo "==> Iniciando servidor..."
-php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
