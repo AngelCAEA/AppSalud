@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified'])->group( function (){
 
 Route::middleware(['auth', 'verified', 'role:2'])->group( function (){
     Route::get('/configuration/user/{id}', [ConfigurationProfileController::class, 'index'])->name('configuration');
+    Route::patch('/configuration/user/{id}', [ConfigurationProfileController::class, 'update'])->name('configuration.update');
 });
 
 require __DIR__.'/settings.php';

@@ -1,13 +1,13 @@
 export interface PatientProfile {
   id: number;
   user_id: number;
-  glucose_target_min: number;
-  glucose_target_max: number;
-  blood_pressure_systolic_target: number;
-  blood_pressure_diastolic_target: number;
+  glucose_min: number;
+  glucose_max: number;
+  systolic_max: number;
+  diastolic_max: number;
+  type_diabetes: string;
   created_at: string;
   updated_at: string;
-  type_diabetes: string;
 }
 
 export interface User {
@@ -15,5 +15,5 @@ export interface User {
   name: string;
   email: string;
   role_id: number;
-  patientProfile?: PatientProfile;
+  patient_profile?: PatientProfile;
 }

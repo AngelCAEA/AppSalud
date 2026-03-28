@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/app-layout';
 import {  Save, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
@@ -12,11 +13,11 @@ import { User } from '@/types/user';
 
 export default function ConfigurationProfile({ user }: { user: User }) {
   const [formData, setFormData] = useState({
-    glucose_target_min: user?.patientProfile?.glucose_target_min || 0,
-    glucose_target_max: user?.patientProfile?.glucose_target_max || 0,
-    blood_pressure_systolic_target: user?.patientProfile?.blood_pressure_systolic_target || 0,
-    blood_pressure_diastolic_target: user?.patientProfile?.blood_pressure_diastolic_target || 0,
-    type_diabetes: user?.patientProfile?.type_diabetes || '',
+    glucose_min: Math.round(Number(user?.patient_profile?.glucose_min)) || 0,
+    glucose_max: Math.round(Number(user?.patient_profile?.glucose_max)) || 0,
+    systolic_max: user?.patient_profile?.systolic_max || 0,
+    diastolic_max: user?.patient_profile?.diastolic_max || 0,
+    type_diabetes: user?.patient_profile?.type_diabetes || '',
   });
 
   if (!user) {
@@ -36,7 +37,7 @@ export default function ConfigurationProfile({ user }: { user: User }) {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: ['glucose_target_min', 'glucose_target_max', 'blood_pressure_systolic_target', 'blood_pressure_diastolic_target'].includes(name) 
+      [name]: ['glucose_min', 'glucose_max', 'systolic_max', 'diastolic_max'].includes(name) 
         ? parseFloat(value) || 0 
         : value
     }));
@@ -47,10 +48,10 @@ export default function ConfigurationProfile({ user }: { user: User }) {
     
     // Validar que todos los campos estén completos
     if (
-      !formData.glucose_target_min ||
-      !formData.glucose_target_max ||
-      !formData.blood_pressure_systolic_target ||
-      !formData.blood_pressure_diastolic_target ||
+      !formData.glucose_min ||
+      !formData.glucose_max ||
+      !formData.systolic_max ||
+      !formData.diastolic_max ||
       !formData.type_diabetes
     ) {
       toast.error('Por favor, completa todos los campos obligatorios');
@@ -58,14 +59,21 @@ export default function ConfigurationProfile({ user }: { user: User }) {
     }
 
     // Validaciones adicionales
-    if (formData.glucose_target_min >= formData.glucose_target_max) {
+    if (formData.glucose_min >= formData.glucose_max) {
       toast.error('El límite mínimo de glucosa debe ser menor que el máximo');
       return;
     }
 
-    toast.success('Datos guardados correctamente');
-    
-    // Aquí irá la lógica para guardar los cambios
+    // Guardar los datos en el backend
+    router.patch(route('configuration.update', user.id), formData, {
+      onSuccess: () => {
+        toast.success('Datos guardados correctamente');
+        router.reload();
+      },
+      onError: () => {
+        toast.error('Error al guardar los datos');
+      },
+    });
   };
 
   return (
@@ -106,8 +114,8 @@ export default function ConfigurationProfile({ user }: { user: User }) {
                     </label>
                     <Input
                       type="number"
-                      name="glucose_target_min"
-                      value={formData.glucose_target_min}
+                      name="glucose_min"
+                      value={formData.glucose_min}
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -119,8 +127,8 @@ export default function ConfigurationProfile({ user }: { user: User }) {
                     </label>
                     <Input
                       type="number"
-                      name="glucose_target_max"
-                      value={formData.glucose_target_max}
+                      name="glucose_max"
+                      value={formData.glucose_max}
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -133,7 +141,7 @@ export default function ConfigurationProfile({ user }: { user: User }) {
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-sm font-medium text-gray-700 dark:text-white">Rango Visual</span>
                     <span className="text-lg font-semibold text-blue-600">
-                      {formData.glucose_target_min} - {formData.glucose_target_max} mg/dL
+                      {formData.glucose_min} - {formData.glucose_max} mg/dL
                     </span>
                   </div>
 
@@ -142,19 +150,19 @@ export default function ConfigurationProfile({ user }: { user: User }) {
                     <div className="relative h-16 rounded-lg overflow-hidden border border-gray-300">
                       {/* Fondo dividido en tres secciones */}
                       <div className="absolute inset-0 flex">
-                        <div className="flex-1 bg-red-100" style={{ flex: formData.glucose_target_min / 300 }}></div>
-                        <div className="flex-1 bg-green-100" style={{ flex: (formData.glucose_target_max - formData.glucose_target_min) / 300 }}></div>
-                        <div className="flex-1 bg-red-100" style={{ flex: (300 - formData.glucose_target_max) / 300 }}></div>
+                        <div className="flex-1 bg-red-100" style={{ flex: formData.glucose_min / 300 }}></div>
+                        <div className="flex-1 bg-green-100" style={{ flex: (formData.glucose_max - formData.glucose_min) / 300 }}></div>
+                        <div className="flex-1 bg-red-100" style={{ flex: (300 - formData.glucose_max) / 300 }}></div>
                       </div>
 
                       {/* Líneas verticales de los límites */}
                       <div 
                         className="absolute top-0 bottom-0 w-1 bg-green-600"
-                        style={{ left: `${(formData.glucose_target_min / 300) * 100}%` }}
+                        style={{ left: `${(formData.glucose_min / 300) * 100}%` }}
                       ></div>
                       <div 
                         className="absolute top-0 bottom-0 w-1 bg-green-600"
-                        style={{ left: `${(formData.glucose_target_max / 300) * 100}%` }}
+                        style={{ left: `${(formData.glucose_max / 300) * 100}%` }}
                       ></div>
 
                       {/* Etiquetas */}
@@ -190,8 +198,8 @@ export default function ConfigurationProfile({ user }: { user: User }) {
                     </label>
                     <Input
                       type="number"
-                      name="blood_pressure_systolic_target"
-                      value={formData.blood_pressure_systolic_target}
+                      name="systolic_max"
+                      value={formData.systolic_max}
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -203,8 +211,8 @@ export default function ConfigurationProfile({ user }: { user: User }) {
                     </label>
                     <Input
                       type="number"
-                      name="blood_pressure_diastolic_target"
-                      value={formData.blood_pressure_diastolic_target}
+                      name="diastolic_max"
+                      value={formData.diastolic_max}
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
