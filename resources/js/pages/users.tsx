@@ -1,7 +1,7 @@
 import { Head, Link, router } from "@inertiajs/react";
 import { Input } from "@/components/ui/input";
 import  { route }  from "ziggy-js";
-import { Search, AlertCircle, Clock, Users as User, TrendingUp } from "lucide-react";
+import { Search, AlertCircle, Clock, Users as User, TrendingUp, SettingsIcon } from "lucide-react";
 import AppLayout from "@/layouts/app-layout";
 import { useState, useEffect } from "react";
 import { details } from "@/routes";
@@ -214,17 +214,27 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
                       </div>
                     </td>
                     <td className="py-2 px-4">
-                      {user.lastRecord && user.lastRecord.value ?(
-                        <button
+                      <div className="flex flex-col gap-2">
+                        {user.lastRecord && user.lastRecord.value ?(
+                          <button
+                            className="text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                            onClick={() => router.visit(details(user.id))}
+                          >
+                            <TrendingUp className="w-4 h-4" />
+                            Ver Detalles
+                          </button>
+                        ):(
+                          <span className="text-gray-500">No hay detalles</span>
+                        )}
+                        <button 
+                          onClick={() => router.visit(route('configuration', user.id))}
                           className="text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
-                          onClick={() => router.visit(details(user.id))}
+                          
                         >
-                          <TrendingUp className="w-4 h-4" />
-                          Ver Detalles
+                          <SettingsIcon className="w-4 h-4" />
+                          Configurar perfil
                         </button>
-                      ):(
-                        <span className="text-gray-500">No hay detalles</span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))
