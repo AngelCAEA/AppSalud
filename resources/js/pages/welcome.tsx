@@ -1,4 +1,4 @@
-import { ArrowRight, Hourglass, Stethoscope, Bell, Activity, TrendingUp, Shield } from 'lucide-react';
+import { ArrowRight, Hourglass, Stethoscope, Bell, Activity, TrendingUp, Shield, Mail, Linkedin, Facebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { type SharedData } from '@/types';
@@ -25,12 +25,13 @@ export function WelcomeGuest() {
             >
               Iniciar Sesión
             </button>
-            <Button
-              onClick={() => router.visit(route('register'))}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 cursor-pointer"
+            <a
+              href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
+              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 px-4 py-2 text-sm font-medium inline-flex items-center gap-2 transition-colors"
             >
-              Regístrate Gratis
-            </Button>
+              <Mail className="w-4 h-4" />
+              Contactar Soporte
+            </a>
           </div>
         </div>
       </header>
@@ -48,24 +49,29 @@ export function WelcomeGuest() {
                 Monitorea tu glucosa y presión arterial, conéctate instantáneamente con tu médico 
                 y recibe alertas inteligentes para tu tranquilidad.
               </p>
+              <p className="text-base text-gray-500 leading-relaxed">
+                Para crear una cuenta, primero contacta a nuestro equipo de soporte por correo o LinkedIn.
+              </p>
             </div>
 
-            {/* CTA Buttons */}
+            {/* Contact Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                onClick={() => router.visit(route('register'))}
-                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 h-14 px-8 text-lg group cursor-pointer"
+              <a
+                href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
+                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 h-14 px-8 text-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
               >
-                Regístrate gratis ahora
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <button
-                onClick={() => router.visit(route('login'))}
-                className="h-14 px-8 text-lg text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                <Mail className="w-5 h-5" />
+                Enviar correo
+              </a>
+              <a
+                href="https://www.linkedin.com/in/angel-carrizosa-espinoza-b4389b289"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 h-14 px-8 text-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
               >
-                Ya tengo cuenta
-                <ArrowRight className="w-5 h-5" />
-              </button>
+                <Linkedin className="w-5 h-5" />
+                Mensaje en LinkedIn
+              </a>
             </div>
 
             {/* Trust Indicators */}
@@ -228,15 +234,26 @@ export function WelcomeGuest() {
             ¿Listo para cuidar tu salud?
           </h2>
           <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-            Únete a miles de pacientes que ya confían en App Salud para su monitoreo diario
+            Contáctanos para crear tu cuenta y comenzar a monitorear tu salud
           </p>
-          <Button
-            onClick={() => router.visit(route('register'))}
-            className="rounded-xl bg-white text-blue-600 hover:bg-gray-50 h-14 px-8 text-lg shadow-lg group cursor-pointer"
-          >
-            Comenzar ahora - Es gratis
-            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
+              className="rounded-xl bg-white text-blue-600 hover:bg-gray-50 h-14 px-8 text-lg shadow-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
+            >
+              <Mail className="w-5 h-5" />
+              Enviar correo
+            </a>
+            <a
+              href="https://www.linkedin.com/in/angel-carrizosa-espinoza-b4389b289"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-white/20 text-white hover:bg-white/30 border border-white/40 h-14 px-8 text-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
+            >
+              <Linkedin className="w-5 h-5" />
+              Mensaje en LinkedIn
+            </a>
+          </div>
         </div>
       </section>
 
@@ -252,7 +269,18 @@ export function WelcomeGuest() {
           <div className="flex gap-6 text-gray-600">
             <button className="hover:text-gray-900 transition-colors">Privacidad</button>
             <button className="hover:text-gray-900 transition-colors">Términos</button>
-            <button className="hover:text-gray-900 transition-colors">Soporte</button>
+            <a href="mailto:carrizosaespinoza@gmail.com" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <Mail className="w-4 h-4" />
+              Contacto
+            </a>
+            <a href="https://www.linkedin.com/in/angel-carrizosa-espinoza-b4389b289" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <Linkedin className="w-4 h-4" />
+              LinkedIn
+            </a>
+            <a href="https://www.facebook.com/angel.carrizosa.16" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <Facebook className="w-4 h-4" />
+              Facebook
+            </a>
           </div>
         </div>
       </footer>

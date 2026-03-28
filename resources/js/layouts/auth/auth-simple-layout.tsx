@@ -6,7 +6,7 @@ import { Activity } from 'lucide-react';
 interface AuthLayoutProps {
     name?: string;
     title?: string;
-    description?: string;
+    description?: React.ReactNode;
 }
 
 export default function AuthSimpleLayout({
