@@ -1,99 +1,295 @@
-import { dashboard, home, pacient, users } from '@/routes';
+import { ArrowRight, Hourglass, Stethoscope, Bell, Activity, TrendingUp, Shield, Mail, Linkedin, Facebook } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { type SharedData } from '@/types';
 import { Head, usePage, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle2, Shield, Clock, Activity, LogOut, HeadphonesIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { route } from 'ziggy-js';
+import WelcomeAuth from './auth/welcome-auth';
 
-// Componente de confeti
-const Confetti = () => {
-  const confettiPieces = Array.from({ length: 50 });
-  
+export function WelcomeGuest() {
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {confettiPieces.map((_, i) => {
-        const randomX = Math.random() * 100;
-        const randomDelay = Math.random() * 0.5;
-        const randomDuration = 2 + Math.random() * 2;
-        const randomRotation = Math.random() * 360;
-        const colors = ['#10b981', '#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        
-        return (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 rounded-full"
-            style={{
-              left: `${randomX}%`,
-              top: '-10px',
-              backgroundColor: randomColor,
-            }}
-            initial={{ y: -20, opacity: 1, rotate: 0 }}
-            animate={{
-              y: window.innerHeight + 20,
-              opacity: [1, 1, 0],
-              rotate: randomRotation * 3,
-            }}
-            transition={{
-              duration: randomDuration,
-              delay: randomDelay,
-              ease: 'linear',
-            }}
-          />
-        );
-      })}
+    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
+      {/* Header/Nav */}
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Activity className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">App Salud</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.visit(route('login'))}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
+            >
+              Iniciar Sesión
+            </button>
+            <a
+              href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
+              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 px-4 py-2 text-sm font-medium inline-flex items-center gap-2 transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              Contactar Soporte
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Left Column - Text Content */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-gray-900 leading-tight">
+                Toma el Mando de tu Salud, Sin Esfuerzo.
+              </h1>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Monitorea tu glucosa y presión arterial, conéctate instantáneamente con tu médico 
+                y recibe alertas inteligentes para tu tranquilidad.
+              </p>
+              <p className="text-base text-gray-500 leading-relaxed">
+                Para crear una cuenta, primero contacta a nuestro equipo de soporte por correo o LinkedIn.
+              </p>
+            </div>
+
+            {/* Contact Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a
+                href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
+                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 h-14 px-8 text-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
+              >
+                <Mail className="w-5 h-5" />
+                Enviar correo
+              </a>
+              <a
+                href="https://www.linkedin.com/in/angel-carrizosa-espinoza-b4389b289"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 h-14 px-8 text-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
+              >
+                <Linkedin className="w-5 h-5" />
+                Mensaje en LinkedIn
+              </a>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex items-center gap-6 pt-4 text-gray-500">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-green-600" />
+                <span className="text-sm">100% Seguro</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-blue-600" />
+                <span className="text-sm">Alertas 24/7</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - App Mockup */}
+          <div className="relative">
+            {/* Background Decoration */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl transform rotate-3" />
+            
+            {/* Phone Mockup */}
+            <div className="relative bg-white rounded-3xl shadow-2xl border-8 border-gray-900 overflow-hidden max-w-sm mx-auto">
+              {/* Phone Top Bar */}
+              <div className="bg-gray-900 h-8 flex items-center justify-center">
+                <div className="w-32 h-5 bg-gray-800 rounded-full" />
+              </div>
+
+              {/* App Content */}
+              <div className="p-6 space-y-6 bg-gradient-to-b from-white to-gray-50">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Hoy, 26 Mar 2026</p>
+                    <p className="text-lg font-semibold text-gray-900">Panel de Salud</p>
+                  </div>
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+
+                {/* Glucose KPI Card */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-green-700 font-medium">Glucosa Actual</span>
+                    <TrendingUp className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div className="text-4xl font-bold text-green-900 mb-1">
+                    118
+                    <span className="text-xl text-green-700 ml-1">mg/dL</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-green-200 rounded-full overflow-hidden">
+                      <div className="h-full w-3/4 bg-green-500 rounded-full" />
+                    </div>
+                    <span className="text-xs text-green-700">Óptimo</span>
+                  </div>
+                </div>
+
+                {/* Mini Chart */}
+                <div className="bg-white rounded-2xl p-4 border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-3">Tendencia 7 días</p>
+                  <div className="h-24 flex items-end justify-between gap-1">
+                    {[65, 78, 82, 70, 85, 92, 88].map((height, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-full transition-all hover:opacity-80"
+                        style={{ height: `${height}%` }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-2">
+                    <span>Lun</span>
+                    <span>Dom</span>
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-purple-50 rounded-xl p-3 border border-purple-200">
+                    <p className="text-xs text-purple-700 mb-1">TIR</p>
+                    <p className="text-2xl font-bold text-purple-900">85%</p>
+                  </div>
+                  <div className="bg-red-50 rounded-xl p-3 border border-red-200">
+                    <p className="text-xs text-red-700 mb-1">Presión</p>
+                    <p className="text-xl font-bold text-red-900">120/80</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone Bottom Bar */}
+              <div className="bg-gray-50 h-4" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="max-w-7xl mx-auto px-6 py-16 bg-white rounded-3xl border border-gray-200 mx-6 mb-16">
+        <div className="text-center mb-12">
+          <h2 className="text-gray-900 mb-4">
+            Tu Salud, Nuestra Prioridad
+          </h2>
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            Herramientas profesionales diseñadas para hacer tu monitoreo más simple y efectivo
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Benefit Card 1 */}
+          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group bg-white">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Hourglass className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Registro en segundos
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Comienza a monitorear tu salud en menos de un minuto. UX diseñada para máxima simplicidad.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Benefit Card 2 */}
+          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group bg-white">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Stethoscope className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Conexión Médica Real
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Tu médico ve tus datos en tiempo real. Telemonitoreo profesional sin salir de casa.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Benefit Card 3 */}
+          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group bg-white">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <Bell className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Alertas Inteligentes
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Recibe notificaciones automáticas si tus valores salen de rango. Tu seguridad 24/7.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="max-w-4xl mx-auto px-6 py-16 text-center">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-12 shadow-2xl">
+          <h2 className="text-white mb-4">
+            ¿Listo para cuidar tu salud?
+          </h2>
+          <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+            Contáctanos para crear tu cuenta y comenzar a monitorear tu salud
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
+              className="rounded-xl bg-white text-blue-600 hover:bg-gray-50 h-14 px-8 text-lg shadow-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
+            >
+              <Mail className="w-5 h-5" />
+              Enviar correo
+            </a>
+            <a
+              href="https://www.linkedin.com/in/angel-carrizosa-espinoza-b4389b289"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-white/20 text-white hover:bg-white/30 border border-white/40 h-14 px-8 text-lg inline-flex items-center justify-center gap-2 font-medium transition-colors"
+            >
+              <Linkedin className="w-5 h-5" />
+              Mensaje en LinkedIn
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 mt-16 py-8 bg-white">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-gray-600">© 2026 App Salud. Todos los derechos reservados.</span>
+          </div>
+          <div className="flex gap-6 text-gray-600">
+            <button className="hover:text-gray-900 transition-colors">Privacidad</button>
+            <button className="hover:text-gray-900 transition-colors">Términos</button>
+            <a href="mailto:carrizosaespinoza@gmail.com" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <Mail className="w-4 h-4" />
+              Contacto
+            </a>
+            <a href="https://www.linkedin.com/in/angel-carrizosa-espinoza-b4389b289" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <Linkedin className="w-4 h-4" />
+              LinkedIn
+            </a>
+            <a href="https://www.facebook.com/angel.carrizosa.16" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 transition-colors flex items-center gap-1">
+              <Facebook className="w-4 h-4" />
+              Facebook
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
-};
+}
 
 export default function Welcome() {
-
     const { auth } = usePage<SharedData>().props;
-    const [showConfetti, setShowConfetti] = useState(false);
-    
-    // Determinar el estado basado en si el usuario está validado Y tiene rol asignado
-    const status = auth.user.status === true && auth.user.role_id !== 0 ? 'approved' : 'pending';
-    const userName = auth.user.name || '';
-    const userRole = auth.user.role_id ? 'Paciente' : 'Usuario';
-    const cleanup = useMobileNavigation();
-
-
-    const handleLogout = () => {
-        cleanup();
-        router.post('/logout', {}, {
-            onSuccess: () => {
-                window.location.href = '/login';
-            },
-            onError: (errors) => {
-                console.error('Error en logout:', errors);
-                window.location.href = '/login';
-            }
-        });
-    };
-
-    useEffect(() => {
-        if (auth.user.status === true && auth.user.role_id !== 0) {
-            setShowConfetti(true);
-            const timer = setTimeout(() => setShowConfetti(false), 4000);
-            return () => clearTimeout(timer);
-        }
-    }, [auth.user?.status, auth.user?.role_id]);
-
-    const handleGoToPanel = () => {
-        if (auth.user?.role_id === 1) {
-            window.location.href = '/pacient';
-        } else if (auth.user?.role_id === 2) {
-            window.location.href = '/users';
-        } else if (auth.user?.role_id === 3) {
-            window.location.href = '/dashboard';
-        } else {
-            window.location.href = '/';
-        }
-    };
 
     return (
         <>
@@ -104,176 +300,7 @@ export default function Welcome() {
                     rel="stylesheet"
                 />
             </Head>
-
-            <div className="min-h-screen flex flex-col items-center justify-between p-12">
-                {showConfetti && <Confetti />}
-                
-                {/* Logo Superior */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="pt-8"
-                >
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <Activity className=" text-white w-5 h-5" />
-                        </div>
-                        <span className="text-xl font-semibold text-dark dark:text-white">App Salud</span>
-                    </div>
-                </motion.div>
-                {/* Contenido Central */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    className="w-full max-w-lg"
-                >
-                    {status === 'pending' ? (
-                    // Estado de espera - Diseño limpio y centrado
-                    <Card className="rounded-2xl border border-gray-200 shadow-sm">
-                        <CardContent>
-                        {/* Icono central - Escudo con Reloj */}
-                        <div className="flex justify-center mb-8">
-                            <motion.div
-                            animate={{
-                                scale: [1, 1.05, 1],
-                            }}
-                            transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                ease: 'easeInOut',
-                            }}
-                            className="relative"
-                            >
-                            <div className="w-24 h-24 bg-blue-50 rounded-2xl flex items-center justify-center relative">
-                                <Shield className="w-12 h-12 text-blue-600" />
-                                <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                                <Clock className="w-5 h-5 text-blue-600" />
-                                </div>
-                            </div>
-                            </motion.div>
-                        </div>
-
-                        {/* Título y Subtítulo */}
-                        <div className="text-center mb-10 space-y-3">
-                            <h1 className="text-dark dark:text-white">Estamos verificando tu perfil</h1>
-                            <p className="text-dark dark:text-white leading-relaxed max-w-md mx-auto">
-                            Por seguridad médica, un administrador debe validar tus credenciales.
-                            </p>
-                        </div>
-                        {/* Barra de Progreso */}
-                        <div className="mb-8">
-                            <div className="flex justify-between items-center mb-3">
-                            <span className="text-sm text-gray-400">Progreso de validación</span>
-                            {auth.user.status === true && auth.user.role_id !== 0 ? (
-                                <span className="text-sm font-medium">100%</span>
-                            ) : auth.user.status === true && auth.user.role_id === 0 ? (
-                                <span className="text-sm font-medium">50%</span>
-                            ) : (
-                                <span className="text-sm font-medium">0%</span>
-                            )}
-                            </div>
-                            <Progress value={auth.user.status === true && auth.user.role_id !== 0 ? 100 : auth.user.status === true && auth.user.role_id === 0 ? 50 : 0} className="h-2.5 bg-gray-100" />
-                        </div>
-                        </CardContent>
-                    </Card>
-                    ) : (
-                    // Estado aprobado - Con confeti
-                    <Card className="rounded-2xl border border-emerald-200 shadow-sm bg-gradient-to-br from-white to-emerald-50/30">
-                        <CardContent className="p-12">
-                        {/* Icono aprobado */}
-                        <div className="flex justify-center mb-8">
-                            <motion.div
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            transition={{
-                                type: 'spring',
-                                stiffness: 200,
-                                damping: 15,
-                            }}
-                            >
-                            <div className="w-24 h-24 bg-emerald-100 rounded-2xl flex items-center justify-center relative">
-                                <Shield className="w-12 h-12 text-emerald-600" />
-                                <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.3, type: 'spring' }}
-                                className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md"
-                                >
-                                <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-                                </motion.div>
-                            </div>
-                            </motion.div>
-                        </div>
-
-                        {/* Título y Subtítulo */}
-                        <div className="text-center mb-10 space-y-3">
-                            <motion.h1
-                            initial={{ scale: 0.9 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 150 }}
-                            className="text-gray-900"
-                            >
-                            ¡Todo listo, {userName}!
-                            </motion.h1>
-                            <p className="text-gray-500 leading-relaxed">
-                            Tu acceso ha sido activado.
-                            </p>
-                        </div>
-
-                        {/* Botón Principal */}
-                        <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <Button
-                            onClick={handleGoToPanel}
-                            className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 h-14 text-base group cursor-pointer"
-                            >
-                            Ir a mi Panel
-                            <motion.div
-                                animate={{ x: [0, 4, 0] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                            >
-                                <ArrowRight className="w-5 h-5 ml-2" />
-                            </motion.div>
-                            </Button>
-                        </motion.div>
-                        </CardContent>
-                    </Card>
-                    )}
-                </motion.div>
-                {/* Parte Inferior - Botones de Acción */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="pb-8 space-y-6 w-full max-w-lg"
-                >
-                    {status === 'pending' && (
-                    <>
-                        <button
-                            onClick={handleLogout}
-                            className="w-full rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 h-12 cursor-pointer flex items-center justify-center gap-2 transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Cerrar Sesión
-                        </button>
-                        
-                        <button
-                        onClick={() => console.log('Soporte técnico')}
-                        className="w-full text-sm text-gray-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 py-2"
-                        >
-                        <HeadphonesIcon className="w-4 h-4" />
-                        Soporte técnico
-                        </button>
-                    </>
-                    )}
-                </motion.div>
-            </div>
-            
-          
+            {auth.user ? <WelcomeAuth /> : <WelcomeGuest />}
         </>
     );
 }
