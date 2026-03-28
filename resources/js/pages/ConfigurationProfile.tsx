@@ -1,41 +1,16 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { Settings, Save, X, AlertCircle } from 'lucide-react';
+import {  Save, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { users } from '@/routes';
+import { User } from '@/types/user';
 
-interface PatientProfile {
-  id: number;
-  user_id: number;
-  glucose_target_min: number;
-  glucose_target_max: number;
-  blood_pressure_systolic_target: number;
-  blood_pressure_diastolic_target: number;
-  created_at: string;
-  updated_at: string;
-  type_diabetes: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  municipality?: string;
-  patientProfile?: PatientProfile;
-}
-
-interface ConfigurationProfileProps {
-  user: User;
-}
-
-export default function ConfigurationProfile({ user }: ConfigurationProfileProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export default function ConfigurationProfile({ user }: { user: User }) {
   const [formData, setFormData] = useState({
     glucose_target_min: user?.patientProfile?.glucose_target_min || 0,
     glucose_target_max: user?.patientProfile?.glucose_target_max || 0,
@@ -89,7 +64,7 @@ export default function ConfigurationProfile({ user }: ConfigurationProfileProps
     }
 
     toast.success('Datos guardados correctamente');
-    console.log('Datos a enviar:', formData);
+    
     // Aquí irá la lógica para guardar los cambios
   };
 
@@ -98,8 +73,19 @@ export default function ConfigurationProfile({ user }: ConfigurationProfileProps
       <Head title="Configuración de Perfil" />
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Metas de salud: {user.name}</h1>
-          <p className="text-gray-600 dark:text-white">Configura los límites y alertas personalizadas del paciente </p>
+            <div className="flex items-center gap-4 mb-6">
+                <Button
+                    onClick={() => router.visit(users())}
+                    className="flex items-center gap-1 cursor-pointer bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 p-0"
+                    variant="ghost"
+                >
+                     <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div>
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Metas de salud: {user.name}</h1>
+                    <p className="text-gray-600 dark:text-white">Configura los límites y alertas personalizadas del paciente </p>
+                </div>
+            </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
