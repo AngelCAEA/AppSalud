@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MeasurementContextController;
 use App\Http\Controllers\HealthRecordsController;
 use App\Http\Controllers\PatientProfileController;
+use App\Http\Controllers\ConfigurationProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -59,6 +60,10 @@ Route::middleware(['auth', 'verified','role:3'])->group( function (){
 
 Route::middleware(['auth', 'verified'])->group( function (){
     Route::get('/details/{id}', [DetailsController::class, 'index'])->name('details');
+});
+
+Route::middleware(['auth', 'verified', 'role:2'])->group( function (){
+    Route::get('/configuration/user/{id}', [ConfigurationProfileController::class, 'index'])->name('configuration');
 });
 
 require __DIR__.'/settings.php';
