@@ -10,13 +10,9 @@ use App\Http\Controllers\HealthRecordsController;
 use App\Http\Controllers\PatientProfileController;
 use App\Http\Controllers\ConfigurationProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    if (Auth::check()) {
-        return Inertia::render('welcome-auth');
-    }
     return Inertia::render('welcome');
 })->name('home');
 

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { type SharedData } from '@/types';
 import { Head, usePage, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 import WelcomeAuth from './auth/welcome-auth';
 
 export function WelcomeGuest() {
@@ -19,14 +20,14 @@ export function WelcomeGuest() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.visit('/login')}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+              onClick={() => router.visit(route('login'))}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
             >
               Iniciar Sesión
             </button>
             <Button
-              onClick={() => router.visit('/register')}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
+              onClick={() => router.visit(route('register'))}
+              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 cursor-pointer"
             >
               Regístrate Gratis
             </Button>
@@ -52,15 +53,15 @@ export function WelcomeGuest() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
-                onClick={() => router.visit('/register')}
-                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 h-14 px-8 text-lg group"
+                onClick={() => router.visit(route('register'))}
+                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 h-14 px-8 text-lg group cursor-pointer"
               >
-                Regístrate Gratis Ahora
+                Regístrate gratis ahora
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               <button
-                onClick={() => router.visit('/login')}
-                className="h-14 px-8 text-lg text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 transition-colors"
+                onClick={() => router.visit(route('login'))}
+                className="h-14 px-8 text-lg text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 Ya tengo cuenta
                 <ArrowRight className="w-5 h-5" />
@@ -174,7 +175,7 @@ export function WelcomeGuest() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Benefit Card 1 */}
-          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group">
+          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group bg-white">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Hourglass className="w-8 h-8 text-blue-600" />
@@ -189,7 +190,7 @@ export function WelcomeGuest() {
           </Card>
 
           {/* Benefit Card 2 */}
-          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group">
+          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group bg-white">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Stethoscope className="w-8 h-8 text-green-600" />
@@ -204,7 +205,7 @@ export function WelcomeGuest() {
           </Card>
 
           {/* Benefit Card 3 */}
-          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group">
+          <Card className="rounded-2xl border-gray-200 hover:shadow-lg transition-shadow group bg-white">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Bell className="w-8 h-8 text-purple-600" />
@@ -230,10 +231,10 @@ export function WelcomeGuest() {
             Únete a miles de pacientes que ya confían en App Salud para su monitoreo diario
           </p>
           <Button
-            onClick={() => router.visit('/register')}
-            className="rounded-xl bg-white text-blue-600 hover:bg-gray-50 h-14 px-8 text-lg shadow-lg group"
+            onClick={() => router.visit(route('register'))}
+            className="rounded-xl bg-white text-blue-600 hover:bg-gray-50 h-14 px-8 text-lg shadow-lg group cursor-pointer"
           >
-            Comenzar Ahora - Es Gratis
+            Comenzar ahora - Es gratis
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
