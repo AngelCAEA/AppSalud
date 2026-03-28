@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { User, LogOut } from 'lucide-react';
 import { type SharedData } from '@/types';
-import { usePage, router, Link } from '@inertiajs/react';
-import { logout } from '@/routes';
+import { usePage, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,9 +28,10 @@ export function UserMenu() {
   };
 
   const handleLogout = () => {
-    console.log('Cerrar sesión');
     setIsOpen(false);
-    router.post(logout());
+    router.post(route('logout'), {}, {
+      onSuccess: () => router.visit(route('home')),
+    });
   };
 
   return (
@@ -65,16 +66,14 @@ export function UserMenu() {
             Ver perfil
           </button>
 
-          <Link
-            href={logout()}
-            as="button"
+          <button
             onClick={handleLogout}
             data-test="logout-button"
             className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Cerrar sesión
-          </Link>
+          </button>
         </div>
       )}
     </div>

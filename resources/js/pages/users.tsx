@@ -83,10 +83,14 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
   return (
     <AppLayout breadcrumbs={[{ title: "Panel de pacientes", href: "#" }]}>
       <Head title="Pacientes" />
-      <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <div className="mb-4">
-          <h1 className="text-lg font-semibold mb-2">Panel de Pacientes</h1>
-          <p className="text-gray-600">Monitoreo de pacientes con diabetes e hipertensión</p>
+      <div className="p-8">
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Panel de pacientes</h1>
+              <p className="text-gray-600 dark:text-white">Monitoreo de pacientes con diabetes e hipertensión</p>
+            </div>
+          </div>
         </div>
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="relative aspect-video overflow-hidden rounded-xl">
