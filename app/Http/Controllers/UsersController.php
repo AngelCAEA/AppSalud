@@ -35,6 +35,7 @@ class UsersController extends Controller{
         }
         
         $search = $request->input('search');
+        $filter = $request->input('filter', 'all');
 
         // Obtener IDs de pacientes asignados al clínico actual
         $patientIds = PatientClinician::where('clinician_id', Auth::id())->pluck('patient_id');
@@ -80,6 +81,12 @@ class UsersController extends Controller{
                       ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             })
+            ->when($filter === 'noRecord', function ($query) {
+                $query->whereDoesntHave('healthRecords');
+            })
+            ->when($filter === 'high' || $filter === 'unstable', function ($query) {
+                $query->whereHas('healthRecords');
+            })
             ->orderBy('id', 'asc')
             ->paginate(5)
             ->withQueryString() 
@@ -97,10 +104,20 @@ class UsersController extends Controller{
                 'lastRecord' => $this->getLastRecord($user),
             ]);
 
+        // Filtrar por nivel de riesgo después de calcular
+        if ($filter === 'high') {
+            $filtered = $users->getCollection()->filter(fn($u) => $u['riskLevel'] === 'high')->values();
+            $users->setCollection($filtered);
+        } elseif ($filter === 'unstable') {
+            $filtered = $users->getCollection()->filter(fn($u) => $u['riskLevel'] === 'low')->values();
+            $users->setCollection($filtered);
+        }
+
             return Inertia::render('users', [
             'users' => $users,
             'filters' => [
                 'search' => $search,
+                'filter' => $filter,
             ],
             'totalPatients' => $totalPatients,
             'highRisk' => $highRisk,
