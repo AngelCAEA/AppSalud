@@ -260,11 +260,6 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
 
         {/* 📄 Paginación */}
         <div className="flex items-center justify-between p-3 text-sm">
-          <span>
-            showing <strong>{users.current_page}</strong> results from {" "}
-            <strong>{users.last_page}</strong> records
-          </span>
-
           <div className="flex items-center gap-2">
             {users.links.map((link, index) => (
               <Link

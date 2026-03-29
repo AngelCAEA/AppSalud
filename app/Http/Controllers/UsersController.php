@@ -124,7 +124,7 @@ class UsersController extends Controller{
             return 'Sin Datos';
         }
 
-        $latestRecord = $user->healthRecords->sortByDesc('recorded_at')->first();
+        $latestRecord = $user->healthRecords->sortByDesc('created_at')->first();
         if (!$latestRecord) {
             return 'Sin Datos';
         }
@@ -158,14 +158,14 @@ class UsersController extends Controller{
      */
     private function getLastRecord($user) {
 
-        $latestRecord = $user->healthRecords->where('type','glucose')->sortByDesc('recorded_at')->first();
+        $latestRecord = $user->healthRecords->where('type','glucose')->sortByDesc('created_at')->first();
         if (!$latestRecord) {
             return ['value' => null, 'date' => null];
         }
         
         return [
             'value' => $latestRecord->glucose_value . ' mg/dL',
-            'date'  => $latestRecord->recorded_at->format('Y-m-d H:i'),
+            'date'  => $latestRecord->created_at->format('Y-m-d H:i'),
         ];
     }
 }
