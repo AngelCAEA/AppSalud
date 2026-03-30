@@ -10,9 +10,9 @@ export function GlucoseKPI({ value, timestamp }: GlucoseKPIProps) {
   const roundedValue = Math.round(value);
   
   const getColorClass = (glucose: number) => {
-    if (glucose < 70 || glucose > 180) return 'text-red-600 border-red-200';
-    if (glucose < 90 || glucose > 140) return 'text-amber-600 border-amber-200';
-    return 'text-green-600 border-green-200';
+    if (glucose < 70 || glucose > 180) return 'dark:bg-gray-800 text-red-600 border-red-200';
+    if (glucose < 90 || glucose > 140) return 'dark:bg-gray-800 text-amber-600 border-amber-200';
+    return 'dark:bg-gray-800 text-green-600 border-green-200';
   };
 
   const getStatus = (glucose: number) => {

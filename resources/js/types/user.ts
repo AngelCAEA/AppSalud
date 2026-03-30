@@ -15,5 +15,27 @@ export interface User {
   name: string;
   email: string;
   role_id: number;
+  status: boolean;
   patient_profile?: PatientProfile;
+  riskLevel: string;
+  tirPercentage: number;
+  lastRecord: { value: string | null; date: string | null } | null;
+}
+
+export type PatientsFilters = 'all' | 'high' | 'unstable' | 'noRecord';
+
+export interface UsersPage {
+  users: {
+    data: User[];
+    links: { url: string | null; label: string; active: boolean }[];
+    current_page: number;
+    last_page: number;
+  };
+  filters: {
+    search?: string;
+    filter?: PatientsFilters;
+  };
+  totalPatients: number;
+  highRisk: number;
+  noRecords: number;
 }

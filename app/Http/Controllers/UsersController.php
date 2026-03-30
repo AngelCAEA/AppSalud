@@ -35,6 +35,7 @@ class UsersController extends Controller{
         }
         
         $search = $request->input('search');
+        $filter = $request->input('filter', 'all');
 
         // Obtener IDs de pacientes asignados al clínico actual
         $patientIds = PatientClinician::where('clinician_id', Auth::id())->pluck('patient_id');
@@ -80,6 +81,12 @@ class UsersController extends Controller{
                       ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             })
+            ->when($filter === 'noRecord', function ($query) {
+                $query->whereDoesntHave('healthRecords');
+            })
+            ->when($filter === 'high' || $filter === 'unstable', function ($query) {
+                $query->whereHas('healthRecords');
+            })
             ->orderBy('id', 'asc')
             ->paginate(5)
             ->withQueryString() 
@@ -97,10 +104,20 @@ class UsersController extends Controller{
                 'lastRecord' => $this->getLastRecord($user),
             ]);
 
+        // Filtrar por nivel de riesgo después de calcular
+        if ($filter === 'high') {
+            $filtered = $users->getCollection()->filter(fn($u) => $u['riskLevel'] === 'high')->values();
+            $users->setCollection($filtered);
+        } elseif ($filter === 'unstable') {
+            $filtered = $users->getCollection()->filter(fn($u) => $u['riskLevel'] === 'low')->values();
+            $users->setCollection($filtered);
+        }
+
             return Inertia::render('users', [
             'users' => $users,
             'filters' => [
                 'search' => $search,
+                'filter' => $filter,
             ],
             'totalPatients' => $totalPatients,
             'highRisk' => $highRisk,
@@ -124,7 +141,7 @@ class UsersController extends Controller{
             return 'Sin Datos';
         }
 
-        $latestRecord = $user->healthRecords->sortByDesc('recorded_at')->first();
+        $latestRecord = $user->healthRecords->sortByDesc('created_at')->first();
         if (!$latestRecord) {
             return 'Sin Datos';
         }
@@ -158,14 +175,14 @@ class UsersController extends Controller{
      */
     private function getLastRecord($user) {
 
-        $latestRecord = $user->healthRecords->where('type','glucose')->sortByDesc('recorded_at')->first();
+        $latestRecord = $user->healthRecords->where('type','glucose')->sortByDesc('created_at')->first();
         if (!$latestRecord) {
             return ['value' => null, 'date' => null];
         }
         
         return [
             'value' => $latestRecord->glucose_value . ' mg/dL',
-            'date'  => $latestRecord->recorded_at->format('Y-m-d H:i'),
+            'date'  => $latestRecord->created_at->format('Y-m-d H:i'),
         ];
     }
 }
