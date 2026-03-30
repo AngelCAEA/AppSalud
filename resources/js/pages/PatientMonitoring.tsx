@@ -4,17 +4,9 @@ import { useState, useEffect } from "react";
 import { users } from '@/routes';
 import { ArrowLeft, Droplet, TrendingUp, Calendar, Heart } from "lucide-react";
 import { LineChart, Line, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
+import { User } from '@/types/user';
+import { Button } from '@/components/ui/button';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  phone: string;
-  address : string;
-  municipality: string;
-  status: boolean;
-}
 interface PatientMonitoringProps {
     user: User;
     tirPercentage: number;
@@ -49,31 +41,35 @@ export default function PatientMonitoring({ user, tirPercentage, minGlucose, max
     return (
         <AppLayout breadcrumbs={[{ title: "Detalles", href: "#" }]}> 
             <Head title="Detalles" />
-            <div className="p-4">
-                <div className="mb-4">  
-                    <button
-                        onClick={() => router.visit(users())}
-                        className="flex items-center gap-2 mb-6 cursor-pointer"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        Volver al panel de pacientes
-                    </button>
-                    <h1 className="mb-2">{user.name}</h1>
-                    <p className="text-gray-600">Vista de Análisis Individual</p>
+            <div className="p-8">
+                <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-6">
+                        <Button
+                            onClick={() => router.visit(users())}
+                            className="flex items-center gap-1 cursor-pointer bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 p-0"
+                            variant="ghost"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2"> {user.name}</h1>
+                            <p className="text-gray-600 dark:text-white">Vista de Análisis Individual </p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-6 mb-8">
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border  p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                             <TrendingUp className="w-6 h-6 text-blue-600" />
                             </div>
                             <div>
-                            <div className="text-gray-600">TIR (30 días)</div>
-                            <div className="text-gray-500">Tiempo en Rango</div>
+                            <div className="text-gray-600 dark:text-white">TIR (30 días)</div>
+                            <div className="text-gray-500 dark:text-white">Tiempo en Rango</div>
                             </div>
                         </div>
-                    <div className="text-gray-900 mb-2">{tir30Days}%</div>
+                    <div className="text-gray-900 dark:text-white mb-2">{tir30Days}%</div>
                         <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                             <div
                             className={`h-full ${
@@ -86,33 +82,33 @@ export default function PatientMonitoring({ user, tirPercentage, minGlucose, max
                             style={{ width: `${tir30Days}%` }}
                             />
                         </div>
-                        <div className="mt-2 text-gray-500">
+                        <div className="mt-2 text-gray-500 dark:text-white">
                             Objetivo: {minGlucose} mg/dL {'<'} {maxGlucose} mg/dL
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border  p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <Droplet className="w-6 h-6 text-purple-600" />
                             </div>
                             <div>
-                            <div className="text-gray-600">HbA1c Estimada</div>
-                            <div className="text-gray-500">Hemoglobina Glicosilada</div>
+                            <div className="text-gray-600 dark:text-white">HbA1c Estimada</div>
+                            <div className="text-gray-500 dark:text-white">Hemoglobina Glicosilada</div>
                             </div>
                         </div>
-                        <div className="text-gray-900 mb-2">{latestHbA1c}%</div>
-                        <div className="mt-2 text-gray-500">
+                        <div className="text-gray-900 dark:text-white mb-2">{latestHbA1c}%</div>
+                        <div className="mt-2 text-gray-500 dark:text-white">
                             Objetivo: {'>'} {estimatedHbA1c}%
                         </div>
                     </div>
                 </div>
 
                 {/* Chart Section */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 mb-8">
                     <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h2 className="text-gray-900 mb-1">Gráfico de Tendencia Dual</h2>
-                        <p className="text-gray-600">Glucosa y Presión Arterial</p>
+                        <h2 className="text-gray-900 dark:text-white mb-1">Gráfico de Tendencia Dual</h2>
+                        <p className="text-gray-600 dark:text-white">Glucosa y Presión Arterial</p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -204,26 +200,26 @@ export default function PatientMonitoring({ user, tirPercentage, minGlucose, max
                     </div>
 
                     {/* Chart Legend Info */}
-                    <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                        <span className="text-gray-700">Glucosa (Línea)</span>
+                        <span className="text-gray-700 dark:text-white">Glucosa (Línea)</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-red-500 rounded-full" />
-                        <span className="text-gray-700">PA Sistólica (Puntos)</span>
+                        <span className="text-gray-700 dark:text-white">PA Sistólica (Puntos)</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-orange-500 rounded-full" />
-                        <span className="text-gray-700">PA Diastólica (Puntos)</span>
+                        <span className="text-gray-700 dark:text-white">PA Diastólica (Puntos)</span>
                     </div>
                     </div>
                 </div>
                 {/* Clinical Notes Section */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border  p-6">
                     <div className="flex items-center gap-2 mb-4">
                     <Heart className="w-5 h-5 text-blue-600" />
-                    <h2 className="text-gray-900">Notas Clínicas</h2>
+                    <h2 className="text-gray-900 dark:text-white">Notas Clínicas</h2>
                     </div>
                     <textarea
                     value={clinicalNotes}
@@ -232,7 +228,7 @@ export default function PatientMonitoring({ user, tirPercentage, minGlucose, max
                     placeholder="Escriba sus notas clínicas aquí..."
                     />
                     <div className="mt-4 flex justify-end gap-2">
-                    <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <button className="px-4 py-2 bg-gray-100 text-gray-700 dark:text-white dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                         Cancelar
                     </button>
                     <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
