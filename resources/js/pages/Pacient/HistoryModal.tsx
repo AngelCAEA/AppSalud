@@ -5,7 +5,7 @@ interface Reading {
   id: string;
   glucose: number | null;
   pressure: { systolic: number; diastolic: number } | null;
-  timestamp: Date;
+  timestamp: string;
   type: 'glucose' | 'pressure' | 'both';
 }
 
@@ -68,16 +68,16 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
     return 'text-green-600';
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('es-ES', {
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
     });

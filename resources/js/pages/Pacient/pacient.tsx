@@ -24,7 +24,7 @@ interface Reading {
   id: string;
   glucose: number | null;
   pressure: { systolic: number; diastolic: number } | null;
-  timestamp: Date;
+  timestamp: string;
   type: 'glucose' | 'pressure' | 'both';
   context_id?: number;
 }
@@ -121,7 +121,7 @@ export default function Pacient() {
                         ? { systolic: record.systolic, diastolic: record.diastolic }
                         : null,
                     type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
-                    timestamp: new Date(record.recorded_at),
+                    timestamp: record.created_at,
                     context_id: record.context_id || undefined,
                 }));
 
@@ -255,7 +255,7 @@ export default function Pacient() {
             glucose: glucoseValue,
             pressure: systolicValue && diastolicValue ? { systolic: systolicValue, diastolic: diastolicValue } : null,
             type: type === 'glucose' ? 'glucose' : 'pressure',
-            timestamp: new Date(data.data.recorded_at),
+            timestamp: data.data.created_at,
             context_id: contextId,
           };
 
@@ -339,10 +339,7 @@ export default function Pacient() {
                     <div className="flex items-center justify-between mb-3">
                     <h2 className="text-black dark:text-white">Presión Arterial</h2>
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {latestPressureReading.timestamp.toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        })}
+                        {latestPressureReading.timestamp}
                     </span>
                     </div>
                     <div className="flex items-center gap-2">

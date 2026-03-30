@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Droplet } from 'lucide-react';
 interface GlucoseKPIProps {
   value: number;
-  timestamp: Date;
+  timestamp: string;
 }
 
 export function GlucoseKPI({ value, timestamp }: GlucoseKPIProps) {
@@ -26,7 +26,7 @@ export function GlucoseKPI({ value, timestamp }: GlucoseKPIProps) {
   const status = getStatus(roundedValue);
 
   const timeAgo = () => {
-    const diff = Date.now() - timestamp.getTime();
+    const diff = Date.now() - new Date(timestamp).getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     

@@ -5,7 +5,7 @@ interface Reading {
   id: string;
   glucose: number | null;
   pressure: { systolic: number; diastolic: number } | null;
-  timestamp: Date;
+  timestamp: string;
   type: 'glucose' | 'pressure' | 'both';
 }
 

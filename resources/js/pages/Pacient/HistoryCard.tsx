@@ -5,7 +5,7 @@ interface Reading {
   id: string;
   glucose: number | null;
   pressure: { systolic: number; diastolic: number } | null;
-  timestamp: Date;
+  timestamp: string;
   type: 'glucose' | 'pressure' | 'both';
 }
 
@@ -24,9 +24,9 @@ interface HistoryCardProps {
 }
 
 export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCardProps) {
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - new Date(date).getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
     if (days === 0) return 'Hoy';
@@ -65,7 +65,7 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-500 dark:text-white">{formatDate(reading.timestamp)}</span>
                 <span className="text-xs text-gray-400 dark:text-white">
-                  {reading.timestamp.toLocaleTimeString('es-ES', {
+                  {new Date(reading.timestamp).toLocaleTimeString('es-ES', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
