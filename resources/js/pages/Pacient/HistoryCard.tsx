@@ -43,16 +43,16 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
   };
 
   return (
-    <Card className="rounded-xl border-2 border-gray-200">
+    <Card className="rounded-xl border-2 dark:bg-gray-800">
       <CardContent className='p-6'>
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            <h3 className="text-gray-700 dark:text-gray-300">Historial Reciente</h3>
+            <Clock className="w-5 h-5 text-gray-600 dark:text-white" />
+            <h3 className="text-gray-700 dark:text-white">Historial Reciente</h3>
           </div>
           <button 
             onClick={onViewAll}
-            className="text-gray-600 dark:text-gray-300 text-sm flex items-center gap-1 hover:gap-2 transition-all cursor-pointer"
+            className="text-gray-600 dark:text-white text-sm flex items-center gap-1 hover:gap-2 transition-all cursor-pointer"
           >
             Ver todo
             <ChevronRight className="w-4 h-4" />
@@ -63,8 +63,8 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
           {readings.map((reading) => (
             <div key={reading.id} className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-500">{formatDate(reading.timestamp)}</span>
-                <span className="text-xs text-gray-400">
+                <span className="text-sm text-gray-500 dark:text-white">{formatDate(reading.timestamp)}</span>
+                <span className="text-xs text-gray-400 dark:text-white">
                   {reading.timestamp.toLocaleTimeString('es-ES', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -75,7 +75,7 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
                 <div className="flex items-center gap-4">
                   {reading.glucose !== null && (
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Glucosa</div>
+                      <div className="text-xs text-gray-500 dark:text-white mb-1">Glucosa</div>
                       <div className={`text-xl ${getGlucoseColor(reading.glucose)}`}>
                         {Math.round(reading.glucose)}
                         <span className="text-sm ml-1 opacity-75">mg/dL</span>
@@ -83,14 +83,14 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
                     </div>
                   )}
                   {reading.glucose !== null && reading.pressure !== null && (
-                    <div className="w-px h-10 bg-gray-200"></div>
+                    <div className="w-px h-10 bg-gray-200 dark:bg-gray-600"></div>
                   )}
                   {reading.pressure !== null && (
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Presión</div>
+                      <div className="text-xs text-gray-500 dark:text-white mb-1">Presión</div>
                       <div className="text-xl text-black dark:text-white">
                         {reading.pressure.systolic}/{reading.pressure.diastolic}
-                        <span className="text-sm ml-1 opacity-75 text-gray-500">mmHg</span>
+                        <span className="text-sm ml-1 opacity-75 text-gray-500 dark:text-white">mmHg</span>
                       </div>
                     </div>
                   )}

@@ -303,7 +303,7 @@ export default function Pacient() {
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {/* KPI Central de Glucosa */}
                 {isLoading || profileLoading ? (
-                    <Card className="rounded-xl border-2 border-gray-200">
+                    <Card className="rounded-xl border-2 dark:bg-gray-800">
                         <CardContent className="p-6">
                             <div className="animate-pulse text-gray-600 dark:text-gray-300">Cargando registros...</div>
                         </CardContent>
@@ -311,10 +311,10 @@ export default function Pacient() {
                 ) : latestGlucoseReading ? (
                     <GlucoseKPI value={latestGlucoseReading.glucose!} timestamp={latestGlucoseReading.timestamp} />
                 ) : (
-                    <Card className="rounded-xl border-2 border-blue-200">
+                    <Card className="rounded-xl border-2 dark:border-blue-200 dark:bg-gray-800">
                         <CardContent className="py-6">
-                            <div className="text-blue-200">No hay registros de glucosa aún</div>
-                            <div className="text-sm text-blue-200 mt-2">Registra tu primera medición presionando el botón de + abajo</div>
+                            <div className="text-blue-200 dark:text-blue-400">No hay registros de glucosa aún</div>
+                            <div className="text-sm text-blue-200 dark:text-blue-400 mt-2">Registra tu primera medición presionando el botón de + abajo</div>
                         </CardContent>
                     </Card>
                 )}
