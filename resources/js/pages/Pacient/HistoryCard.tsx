@@ -25,13 +25,17 @@ interface HistoryCardProps {
 
 export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCardProps) {
   const formatDate = (date: string) => {
+    const datePart = date.split('T')[0];
     const now = new Date();
-    const diff = now.getTime() - new Date(date).getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
-    if (days === 0) return 'Hoy';
-    if (days === 1) return 'Ayer';
-    return `Hace ${days} días`;
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+    if (datePart === todayStr) return 'Hoy';
+    if (datePart === yesterdayStr) return 'Ayer';
+    const [year, month, day] = datePart.split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const getGlucoseColor = (glucose: number) => {
@@ -65,10 +69,7 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-500 dark:text-white">{formatDate(reading.timestamp)}</span>
                 <span className="text-xs text-gray-400 dark:text-white">
-                  {new Date(reading.timestamp).toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {reading.timestamp.split('T')[1]?.substring(0, 5)}
                 </span>
               </div>
               <div className="flex items-center justify-between">

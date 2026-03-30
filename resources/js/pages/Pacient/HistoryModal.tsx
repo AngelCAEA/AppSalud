@@ -30,14 +30,10 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
     if (!appliedStartDate && !appliedEndDate) return readings;
 
     return readings.filter(reading => {
-      const readingDate = new Date(reading.timestamp);
-      const start = appliedStartDate ? new Date(appliedStartDate) : new Date(0);
-      const end = appliedEndDate ? new Date(appliedEndDate) : new Date();
-      
-      // Set end date to end of day
-      end.setHours(23, 59, 59, 999);
-      
-      return readingDate >= start && readingDate <= end;
+      const readingDateISO = reading.timestamp.split('T')[0];
+      const start = appliedStartDate || '0000-00-00';
+      const end = appliedEndDate || '9999-99-99';
+      return readingDateISO >= start && readingDateISO <= end;
     });
   }, [readings, appliedStartDate, appliedEndDate]);
 
@@ -69,18 +65,14 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    const [datePart] = date.split('T');
+    const [year, month, day] = datePart.split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const formatTime = (date: string) => {
-    return new Date(date).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const timePart = date.split('T')[1] || '';
+    return timePart.substring(0, 5);
   };
 
   if (!isOpen) return null;

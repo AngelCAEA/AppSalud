@@ -41,12 +41,9 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
   const glucoseData = last30Days.map(date => {
     const dayReadings = readings.filter(r => {
       if (!r.glucose) return false;
-      const readingDate = new Date(r.timestamp);
-      return (
-        readingDate.getDate() === date.getDate() &&
-        readingDate.getMonth() === date.getMonth() &&
-        readingDate.getFullYear() === date.getFullYear()
-      );
+      const readingDateISO = r.timestamp.split('T')[0];
+      const dayStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      return readingDateISO === dayStr;
     });
 
     // Calculate average glucose for the day
@@ -65,12 +62,9 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
   const pressureData = last30Days.map(date => {
     const dayReadings = readings.filter(r => {
       if (!r.pressure) return false;
-      const readingDate = new Date(r.timestamp);
-      return (
-        readingDate.getDate() === date.getDate() &&
-        readingDate.getMonth() === date.getMonth() &&
-        readingDate.getFullYear() === date.getFullYear()
-      );
+      const readingDateISO = r.timestamp.split('T')[0];
+      const dayStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      return readingDateISO === dayStr;
     });
 
     // Calculate average pressure for the day

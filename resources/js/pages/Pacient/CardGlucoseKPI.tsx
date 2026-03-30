@@ -26,12 +26,8 @@ export function GlucoseKPI({ value, timestamp }: GlucoseKPIProps) {
   const status = getStatus(roundedValue);
 
   const timeAgo = () => {
-    const diff = Date.now() - new Date(timestamp).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 0) return `Hace ${hours}h`;
-    return `Hace ${minutes}min`;
+    const timePart = timestamp.split('T')[1]?.substring(0, 5) || '';
+    return timePart;
   };
 
   return (
