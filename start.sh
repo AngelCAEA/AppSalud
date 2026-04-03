@@ -31,6 +31,7 @@ CACHE_DRIVER=${CACHE_DRIVER:-file}
 QUEUE_CONNECTION=${QUEUE_CONNECTION:-sync}
 
 VITE_APP_URL=${APP_URL}
+INERTIA_SSR_ENABLED=false
 EOF
 
 echo "==> Generando APP_KEY..."
@@ -44,9 +45,6 @@ php artisan route:clear
 
 echo "==> Corriendo migraciones..."
 php artisan migrate --force || true
-
-echo "==> Iniciando SSR..."
-php artisan inertia:start-ssr &
 
 echo "==> Iniciando servidor..."
 exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
