@@ -42,11 +42,8 @@ php artisan cache:clear
 php artisan view:clear
 php artisan route:clear
 
-echo "==> Creando tabla de sesiones si no existe..."
-php artisan session:table 2>/dev/null || true
-
 echo "==> Corriendo migraciones..."
-php artisan migrate --force
+php artisan migrate --force || true
 
 echo "==> Iniciando SSR..."
 php artisan inertia:start-ssr &
