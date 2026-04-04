@@ -339,7 +339,7 @@ export default function Pacient() {
                     <div className="flex items-center justify-between mb-3">
                     <h2 className="text-black dark:text-white">Presión Arterial</h2>
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {latestPressureReading.timestamp}
+                        {new Date(latestPressureReading.timestamp).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
                     </span>
                     </div>
                     <div className="flex items-center gap-2">
