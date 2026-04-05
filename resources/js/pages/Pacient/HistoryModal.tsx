@@ -65,14 +65,15 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
   };
 
   const formatDate = (date: string) => {
-    const [datePart] = date.split('T');
-    const [year, month, day] = datePart.split('-');
-    return `${day}/${month}/${year}`;
+    const d = new Date(date);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return d.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   const formatTime = (date: string) => {
-    const timePart = date.split('T')[1] || '';
-    return timePart.substring(0, 5);
+    const d = new Date(date);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return d.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   if (!isOpen) return null;
