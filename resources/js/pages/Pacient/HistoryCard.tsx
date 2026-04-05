@@ -69,7 +69,7 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-500 dark:text-white">{formatDate(reading.timestamp)}</span>
                 <span className="text-xs text-gray-400 dark:text-white">
-                  {reading.timestamp.split('T')[1]?.substring(0, 5)}
+                  {new Date(reading.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
                 </span>
               </div>
               <div className="flex items-center justify-between">

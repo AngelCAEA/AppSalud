@@ -157,25 +157,10 @@ export default function Pacient() {
      * También valida que los valores estén dentro de los rangos permitidos
      * según el perfil de salud del paciente
      */
-    const handleAddReading = async (glucose: number, systolic: number, diastolic: number, contextId?: number) => {
-        // Inicializar tipo de registro y valores
-        let type: 'glucose' | 'blood_pressure' = 'glucose';
-        let glucoseValue: number | null = glucose;
-        let systolicValue: number | null = systolic;
-        let diastolicValue: number | null = diastolic;
-
-        // Determinar el tipo de registro según los valores por defecto
-        // Si presión es la default (120/80), es solo glucosa
-        if (systolic === 120 && diastolic === 80) {
-          type = 'glucose';
-          systolicValue = null;
-          diastolicValue = null;
-        }
-        // Si glucosa es la default (100), es solo presión arterial
-        else if (glucose === 100) {
-          type = 'blood_pressure';
-          glucoseValue = null;
-        }
+    const handleAddReading = async (type: 'glucose' | 'blood_pressure', glucose: number | null, systolic: number | null, diastolic: number | null, contextId?: number) => {
+        const glucoseValue = glucose;
+        const systolicValue = systolic;
+        const diastolicValue = diastolic;
 
         // Validar contra los límites del perfil del paciente si existen
         if (patientProfile) {
@@ -339,7 +324,18 @@ export default function Pacient() {
                     <div className="flex items-center justify-between mb-3">
                     <h2 className="text-black dark:text-white">Presión Arterial</h2>
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {new Date(latestPressureReading.timestamp).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + new Date(latestPressureReading.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                        {(() => {
+                            const date = new Date(latestPressureReading.timestamp);
+                            const now = new Date();
+                            const diffMs = now.getTime() - date.getTime();
+                            const oneDayMs = 24 * 60 * 60 * 1000;
+                            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                            const time = date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
+                            if (diffMs >= oneDayMs) {
+                                return date.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: 'short' }) + ' ' + time;
+                            }
+                            return time;
+                        })()}
                     </span>
                     </div>
                     <div className="flex items-center gap-2">

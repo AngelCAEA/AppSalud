@@ -11,7 +11,7 @@ interface MeasurementContext {
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (glucose: number, systolic: number, diastolic: number, contextId?: number) => Promise<void>;
+  onSubmit: (type: 'glucose' | 'blood_pressure', glucose: number | null, systolic: number | null, diastolic: number | null, contextId?: number) => Promise<void>;
 }
 
 type RegistrationStep = 'select' | 'glucose' | 'pressure';
@@ -139,8 +139,7 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
     e.preventDefault();
     const glucoseValue = parseInt(glucose);
     if (glucoseValue && selectedContextId) {
-      // Submit with default pressure values and context_id
-      await onSubmit(glucoseValue, 120, 80, selectedContextId);
+      await onSubmit('glucose', glucoseValue, null, null, selectedContextId);
       setGlucose('');
       setSelectedContextId(null);
       handleClose();
@@ -153,8 +152,7 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
     const systolicValue = parseInt(systolic);
     const diastolicValue = parseInt(diastolic);
     if (systolicValue && diastolicValue && selectedContextId) {
-      // Submit with default glucose value and context_id
-      await onSubmit(100, systolicValue, diastolicValue, selectedContextId);
+      await onSubmit('blood_pressure', null, systolicValue, diastolicValue, selectedContextId);
       setSystolic('');
       setDiastolic('');
       setSelectedContextId(null);

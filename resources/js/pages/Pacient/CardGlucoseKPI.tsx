@@ -26,13 +26,23 @@ export function GlucoseKPI({ value, timestamp }: GlucoseKPIProps) {
   const status = getStatus(roundedValue);
 
   const timeAgo = () => {
-    const timePart = timestamp.split('T')[1]?.substring(0, 5) || '';
-    return timePart;
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (diffMs >= oneDayMs) {
+      return date.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: 'short' }) +
+        ' ' + date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    return date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   return (
     <Card className={`rounded-xl border-2 ${colorClass}`}>
-      <CardContent className='p-6'>
+      <CardContent>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Droplet className="w-6 h-6" />
