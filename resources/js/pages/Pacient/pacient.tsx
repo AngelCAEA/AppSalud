@@ -218,6 +218,7 @@ export default function Pacient() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
               'X-CSRF-TOKEN': csrfToken,
             },
             body: JSON.stringify(payload),
@@ -225,8 +226,12 @@ export default function Pacient() {
 
           // Validar respuesta del servidor
           if (!response.ok) {
-            const errorData = await response.json();
-            showError(errorData.message || 'Error al guardar el registro');
+            try {
+              const errorData = await response.json();
+              showError(errorData.message || 'Error al guardar el registro');
+            } catch {
+              showError('Error al guardar el registro. Intenta recargar la página.');
+            }
             return;
           }
 
@@ -240,7 +245,7 @@ export default function Pacient() {
             glucose: glucoseValue,
             pressure: systolicValue && diastolicValue ? { systolic: systolicValue, diastolic: diastolicValue } : null,
             type: type === 'glucose' ? 'glucose' : 'pressure',
-            timestamp: data.data.created_at,
+            timestamp: data.data.created_at || data.data.recorded_at || new Date().toISOString(),
             context_id: contextId,
           };
 

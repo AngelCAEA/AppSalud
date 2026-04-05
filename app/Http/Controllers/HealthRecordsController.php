@@ -54,6 +54,9 @@ class HealthRecordsController extends Controller
                 'recorded_at' => now(),
             ]);
 
+            // Refrescar para obtener los valores generados por la BD (created_at)
+            $healthRecord->refresh();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Registro de salud guardado exitosamente',

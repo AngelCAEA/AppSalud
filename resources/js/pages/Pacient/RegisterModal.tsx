@@ -72,6 +72,11 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
   useEffect(() => {
     if (isOpen) {
       fetchMeasurementContexts();
+      setStep('select');
+      setGlucose('');
+      setSelectedContextId(null);
+      setSystolic('');
+      setDiastolic('');
     }
   }, [isOpen]);
 
@@ -139,10 +144,11 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
     e.preventDefault();
     const glucoseValue = parseInt(glucose);
     if (glucoseValue && selectedContextId) {
-      await onSubmit('glucose', glucoseValue, null, null, selectedContextId);
-      setGlucose('');
-      setSelectedContextId(null);
-      handleClose();
+      try {
+        await onSubmit('glucose', glucoseValue, null, null, selectedContextId);
+      } catch (error) {
+        console.error('Error al guardar glucosa:', error);
+      }
     }
   };
 
@@ -152,11 +158,11 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
     const systolicValue = parseInt(systolic);
     const diastolicValue = parseInt(diastolic);
     if (systolicValue && diastolicValue && selectedContextId) {
-      await onSubmit('blood_pressure', null, systolicValue, diastolicValue, selectedContextId);
-      setSystolic('');
-      setDiastolic('');
-      setSelectedContextId(null);
-      handleClose();
+      try {
+        await onSubmit('blood_pressure', null, systolicValue, diastolicValue, selectedContextId);
+      } catch (error) {
+        console.error('Error al guardar presión:', error);
+      }
     }
   };
 
