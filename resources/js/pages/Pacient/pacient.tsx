@@ -121,7 +121,7 @@ export default function Pacient() {
                         ? { systolic: record.systolic, diastolic: record.diastolic }
                         : null,
                     type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
-                    timestamp: record.created_at,
+                    timestamp: record.recorded_at || record.created_at,
                     context_id: record.context_id || undefined,
                 }));
 

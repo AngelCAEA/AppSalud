@@ -140,6 +140,7 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
               </div>
               <div>
                 <h2 className="text-gray-800">Glucosa</h2>
+                <p className="text-sm text-gray-500">Últimos 30 días</p>
               </div>
             </div>
 
@@ -212,6 +213,7 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
               </div>
               <div>
                 <h2 className="text-gray-800">Presión Arterial</h2>
+                <p className="text-sm text-gray-500">Últimos 30 días</p>
               </div>
             </div>
 
