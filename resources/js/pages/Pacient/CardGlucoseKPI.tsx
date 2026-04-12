@@ -26,13 +26,12 @@ export function GlucoseKPI({ value, timestamp }: GlucoseKPIProps) {
   const status = getStatus(roundedValue);
 
   const timeAgo = () => {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timeZone = 'America/Mexico_City';
     const date = new Date(timestamp);
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const oneDayMs = 24 * 60 * 60 * 1000;
+    const isDifferentDay = date.toLocaleDateString('en-CA', { timeZone }) !== now.toLocaleDateString('en-CA', { timeZone });
 
-    if (diffMs >= oneDayMs) {
+    if (isDifferentDay) {
       return date.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: 'short' }) +
         ' ' + date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
     }

@@ -121,11 +121,12 @@ export default function Pacient() {
                         ? { systolic: record.systolic, diastolic: record.diastolic }
                         : null,
                     type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
-                    timestamp: record.created_at,
+                    timestamp: record.recorded_at || record.created_at,
                     context_id: record.context_id || undefined,
                 }));
 
                 setReadings(mappedReadings);
+                console.log('Registros cargados:', mappedReadings);
             } catch (error) {
                 console.error('Error cargando registros:', error);
                 // Mostrar mensaje de error silenciosamente sin interrumpir la UX
@@ -332,11 +333,10 @@ export default function Pacient() {
                         {(() => {
                             const date = new Date(latestPressureReading.timestamp);
                             const now = new Date();
-                            const diffMs = now.getTime() - date.getTime();
-                            const oneDayMs = 24 * 60 * 60 * 1000;
-                            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                            const timeZone = 'America/Mexico_City';
+                            const isDifferentDay = date.toLocaleDateString('en-CA', { timeZone }) !== now.toLocaleDateString('en-CA', { timeZone });
                             const time = date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
-                            if (diffMs >= oneDayMs) {
+                            if (isDifferentDay) {
                                 return date.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: 'short' }) + ' ' + time;
                             }
                             return time;
