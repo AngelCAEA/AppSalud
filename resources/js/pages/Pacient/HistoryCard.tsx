@@ -24,18 +24,20 @@ interface HistoryCardProps {
 }
 
 export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCardProps) {
+  const timeZone = 'America/Mexico_City';
+
   const formatDate = (date: string) => {
-    const datePart = date.split('T')[0];
+    const d = new Date(date);
     const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone });
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA', { timeZone });
+    const dateStr = d.toLocaleDateString('en-CA', { timeZone });
 
-    if (datePart === todayStr) return 'Hoy';
-    if (datePart === yesterdayStr) return 'Ayer';
-    const [year, month, day] = datePart.split('-');
-    return `${day}/${month}/${year}`;
+    if (dateStr === todayStr) return 'Hoy';
+    if (dateStr === yesterdayStr) return 'Ayer';
+    return d.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   const getGlucoseColor = (glucose: number) => {
@@ -69,7 +71,7 @@ export function HistoryCard({ readings, onViewAll, patientProfile }: HistoryCard
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-500 dark:text-white">{formatDate(reading.timestamp)}</span>
                 <span className="text-xs text-gray-400 dark:text-white">
-                  {new Date(reading.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                  {new Date(reading.timestamp).toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', hour12: true })}
                 </span>
               </div>
               <div className="flex items-center justify-between">

@@ -66,13 +66,13 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
 
   const formatDate = (date: string) => {
     const d = new Date(date);
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timeZone = 'America/Mexico_City';
     return d.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   const formatTime = (date: string) => {
     const d = new Date(date);
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timeZone = 'America/Mexico_City';
     return d.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
   };
 

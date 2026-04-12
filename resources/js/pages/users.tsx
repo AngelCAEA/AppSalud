@@ -221,7 +221,7 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
                             <span className="text-gray-900 dark:text-white font-medium">{user.lastRecord.value}</span>
                             <br />
                             <span className="text-gray-600  dark:text-white text-sm">
-                              {user.lastRecord.date}
+                              {user.lastRecord.date ? new Date(user.lastRecord.date).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
                             </span>
                           </div>
                           ) : (
