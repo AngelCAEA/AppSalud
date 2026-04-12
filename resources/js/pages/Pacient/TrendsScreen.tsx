@@ -24,68 +24,36 @@ interface TrendsScreenProps {
 }
 
 export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenProps) {
-  // Generate data for the last 30 days
-  const getLast30Days = () => {
-    const days = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push(date);
-    }
-    return days;
-  };
+ 
+  const timeZone = 'America/Mexico_City';
 
-  const last30Days = getLast30Days();
+  // Prepare glucose data - each reading is a point
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Prepare glucose data
-  const glucoseData = last30Days.map(date => {
-    const dayReadings = readings.filter(r => {
-      if (!r.glucose) return false;
-      const readingDateISO = r.timestamp.split('T')[0];
-      const dayStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      return readingDateISO === dayStr;
-    });
+  const glucoseData = readings
+    .filter(r => r.glucose !== null && new Date(r.timestamp) >= thirtyDaysAgo)
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .map(r => ({
+      date: new Date(r.timestamp).toLocaleDateString('es-MX', { timeZone, day: 'numeric', month: 'short' }),
+      fullDate: new Date(r.timestamp),
+      glucose: r.glucose,
+    }));
 
-    // Calculate average glucose for the day
-    const avgGlucose = dayReadings.length > 0
-      ? dayReadings.reduce((sum, r) => sum + (r.glucose || 0), 0) / dayReadings.length
-      : null;
-
-    return {
-      date: date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
-      fullDate: date,
-      glucose: avgGlucose ? Math.round(avgGlucose) : null,
-    };
-  });
-
-  // Prepare pressure data
-  const pressureData = last30Days.map(date => {
-    const dayReadings = readings.filter(r => {
-      if (!r.pressure) return false;
-      const readingDateISO = r.timestamp.split('T')[0];
-      const dayStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      return readingDateISO === dayStr;
-    });
-
-    // Calculate average pressure for the day
-    const avgSystolic = dayReadings.length > 0
-      ? dayReadings.reduce((sum, r) => sum + (r.pressure?.systolic || 0), 0) / dayReadings.length
-      : null;
-    const avgDiastolic = dayReadings.length > 0
-      ? dayReadings.reduce((sum, r) => sum + (r.pressure?.diastolic || 0), 0) / dayReadings.length
-      : null;
-
-    return {
-      date: date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
-      fullDate: date,
-      systolic: avgSystolic ? Math.round(avgSystolic) : null,
-      diastolic: avgDiastolic ? Math.round(avgDiastolic) : null,
-    };
-  });
+  // Prepare pressure data - each reading is a point
+  const pressureData = readings
+    .filter(r => r.pressure !== null && new Date(r.timestamp) >= thirtyDaysAgo)
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .map(r => ({
+      date: new Date(r.timestamp).toLocaleDateString('es-MX', { timeZone, day: 'numeric', month: 'short' }),
+      fullDate: new Date(r.timestamp),
+      systolic: r.pressure!.systolic,
+      diastolic: r.pressure!.diastolic,
+    }));
 
   // Check if there's enough data to show
   const hasGlucoseData = glucoseData.some(d => d.glucose !== null);
-  const hasPressureData = pressureData.some(d => d.systolic !== null);
+  const hasPressureData = pressureData.some(d => d.systolic !== null && d.diastolic !== null);
 
   // Custom tooltip for glucose
   const GlucoseTooltip = ({ active, payload }: any) => {
@@ -172,7 +140,6 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
               </div>
               <div>
                 <h2 className="text-gray-800">Glucosa</h2>
-                <p className="text-sm text-gray-500">Últimos 30 días</p>
               </div>
             </div>
 
@@ -201,7 +168,17 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
                   dataKey="glucose" 
                   stroke="#10b981" 
                   strokeWidth={3}
-                  dot={{ fill: '#10b981', r: 4 }}
+                  dot={(props: any) => {
+                    const { cx, cy, value } = props;
+                    if (value === null || value === undefined) return <></>;
+                    let fill = '#10b981'; // green
+                    if (patientProfile && (value < patientProfile.glucose_min || value > patientProfile.glucose_max)) {
+                      fill = '#ef4444'; // red
+                    } else if (value < 90 || value > 140) {
+                      fill = '#f59e0b'; // amber
+                    }
+                    return <circle cx={cx} cy={cy} r={4} fill={fill} stroke={fill} strokeWidth={1} />;
+                  }}
                   activeDot={{ r: 6 }}
                   connectNulls
                 />
@@ -235,7 +212,6 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
               </div>
               <div>
                 <h2 className="text-gray-800">Presión Arterial</h2>
-                <p className="text-sm text-gray-500">Últimos 30 días</p>
               </div>
             </div>
 
