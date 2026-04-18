@@ -51,7 +51,7 @@ class HealthRecordsController extends Controller
                 'diastolic' => $diastolicValue,
                 'pulse' => $pulseValue,
                 'context_id' => $contextId,
-                'recorded_at' => now(),
+                'recorded_at' => now('UTC'),
             ]);
 
             // Refrescar para obtener los valores generados por la BD (created_at)
