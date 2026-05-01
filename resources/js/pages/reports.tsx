@@ -250,9 +250,13 @@ export default function Reports(){
         <AppLayout breadcrumbs={[{ title: "Reportes", href: "#" }]}> 
             <Head title="Reportes" />
              <div className="p-8">
-                <div className="mb-8">
-                    <h1 className="text-gray-900 dark:text-gray-100 mb-2">Reportes y Exportación</h1>
-                    <p className="text-gray-600 dark:text-gray-300">Descarga datos de pacientes y mediciones en formato Excel</p>
+               <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-6">
+                        <div>
+                        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Reportes y Exportación</h1>
+                        <p className="text-gray-600 dark:text-white">Descarga datos de pacientes y mediciones en formato Excel</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Report Type Selection */}
