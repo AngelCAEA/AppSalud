@@ -1,0 +1,73 @@
+import { NavUser } from '@/components/nav-user';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { Toaster } from 'sonner';
+import { type ReactNode } from 'react';
+
+interface PacientLayoutProps {
+    /** Contenido principal de la pantalla */
+    children: ReactNode;
+    /** Título que se muestra centrado en el header. Por defecto "Mi Salud" */
+    title?: string;
+}
+
+/**
+ * Layout exclusivo para la vista de paciente.
+ *
+ * Diseño:
+ * - Sin barra lateral (sidebar), ya que el paciente solo accede a esta sección.
+ * - Header fijo en la parte superior con el nombre de la app centrado
+ *   y el menú de usuario anclado a la esquina superior derecha.
+ * - Fondo suave (gris-azulado) en el área de contenido para diferenciarla del header.
+ * - Completamente responsivo: el header se adapta a pantallas pequeñas (móvil)
+ *   y grandes (tablet / escritorio).
+ */
+export default function PacientLayout({
+    children,
+    title = 'App Salud',
+}: PacientLayoutProps) {
+    return (
+        /* SidebarProvider es requerido por el hook useSidebar que utiliza NavUser internamente.
+           No renderiza ninguna barra lateral, solo provee el contexto necesario. */
+        <SidebarProvider>
+        <div className="flex min-h-screen w-full flex-col bg-[#eef2f7] dark:bg-gray-950">
+            {/* ── Header superior ───────────────────────────────────────────────
+                sticky: permanece visible al hacer scroll
+                backdrop-blur: efecto de cristal sobre el contenido que pasa por debajo
+                h-14 en móvil / h-16 en sm+ para dar más respiro en pantallas grandes
+            ─────────────────────────────────────────────────────────────────── */}
+            <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/90 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/90">
+                <div className="relative flex h-14 items-center justify-center px-4 sm:h-16">
+                    {/* Nombre de la app — centrado de forma absoluta para que
+                        no se desplace aunque el UserMenu tenga más o menos ancho */}
+                    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-base font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">
+                        {title}
+                    </span>
+
+                    {/* Menú de usuario — anclado al extremo derecho.
+                        NavUser reutiliza el mismo componente del sidebar (DropdownMenu
+                        con UserInfo + UserMenuContent) para consistencia visual. */}
+                    <div className="ml-auto">
+                        <NavUser />
+                    </div>
+                </div>
+            </header>
+
+            {/* ── Contenido principal ───────────────────────────────────────────
+                flex-1 para que ocupe todo el alto restante.
+                overflow-y-auto permite scroll dentro de la sección de contenido.
+            ─────────────────────────────────────────────────────────────────── */}
+            <main className="flex flex-1 flex-col overflow-y-auto">
+                {children}
+            </main>
+
+            {/* Notificaciones toast globales del layout */}
+            <Toaster
+                position="bottom-left"
+                expand
+                richColors
+                closeButton
+            />
+        </div>
+        </SidebarProvider>
+    );
+}

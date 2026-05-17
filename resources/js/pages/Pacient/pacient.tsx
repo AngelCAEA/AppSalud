@@ -1,24 +1,17 @@
 import { GlucoseKPI } from '@/pages/Pacient/CardGlucoseKPI';
 import { TrendsScreen } from '@/pages/Pacient/TrendsScreen';
 import { HistoryCard } from '@/pages/Pacient/HistoryCard';
-import { Activity, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { FAB } from '@/pages/Pacient/FAB';
 import { RegisterModal } from '@/pages/Pacient/RegisterModal';
 import { HistoryModal } from '@/pages/Pacient/HistoryModal';
 import { Head, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { UserMenu } from '@/pages/Pacient/UserMenu';
 import { Toast } from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { type SharedData } from '@/types';
-import AppLayout from '@/layouts/app-layout';
-import { pacient } from '@/routes';
+import PacientLayout from '@/layouts/pacient-layout';
 import { Card, CardContent } from '@/components/ui/card';
-
-const breadcrumbs = [
-  { title: 'Paciente', 
-    href: pacient().url },
-];
 
 interface Reading {
   id: string;
@@ -273,7 +266,7 @@ export default function Pacient() {
         return <TrendsScreen readings={readings} patientProfile={patientProfile} onBack={() => setCurrentView('dashboard')} />;
     }
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <PacientLayout>
             <Head title="Paciente" />
 
             {/* Toast Container */}
@@ -384,6 +377,6 @@ export default function Pacient() {
                 readings={readings}
             />
 
-        </AppLayout>
+        </PacientLayout>
     );
 }
