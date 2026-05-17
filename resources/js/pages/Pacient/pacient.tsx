@@ -11,7 +11,6 @@ import { Toast } from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { type SharedData } from '@/types';
 import PacientLayout from '@/layouts/pacient-layout';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface Reading {
   id: string;
@@ -283,74 +282,55 @@ export default function Pacient() {
               ))}
             </div>
 
-            {/* Main Content */}
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                {/* KPI Central de Glucosa */}
+            {/* Main Content — ancho máximo fijo centrado para que las cards
+                no se expandan al 100% en pantallas grandes */}
+            <div className="w-full max-w-lg mx-auto flex flex-col gap-4 p-4">
+
+                {/* ── Resumen de Salud (Glucosa + Presión en una sola card) ─── */}
                 {isLoading || profileLoading ? (
-                    <Card className="rounded-xl border-2 dark:bg-gray-800">
-                        <CardContent className="p-6">
-                            <div className="animate-pulse text-gray-600 dark:text-gray-300">Cargando registros...</div>
-                        </CardContent>
-                    </Card>
+                    /* Skeleton de carga */
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 animate-pulse">
+                        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+                        <div className="h-20 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                        <div className="h-3 w-20 bg-gray-100 dark:bg-gray-800 rounded" />
+                    </div>
                 ) : latestGlucoseReading ? (
-                    <GlucoseKPI value={latestGlucoseReading.glucose!} timestamp={latestGlucoseReading.timestamp} />
+                    /* Card con glucosa y presión arterial integradas */
+                    <GlucoseKPI
+                        value={latestGlucoseReading.glucose!}
+                        timestamp={latestGlucoseReading.timestamp}
+                        latestPressure={latestPressureReading?.pressure ?? null}
+                        pressureTimestamp={latestPressureReading?.timestamp ?? null}
+                        patientProfile={patientProfile}
+                        /* Últimos 8 registros de glucosa para el sparkline,
+                           del más reciente al más antiguo (el componente los ordena) */
+                        glucoseHistory={readings
+                            .filter(r => r.glucose !== null)
+                            .slice(0, 8)
+                            .map(r => ({ value: r.glucose!, timestamp: r.timestamp }))}
+                    />
                 ) : (
-                    <Card className="rounded-xl border-2 dark:border-blue-200 dark:bg-gray-800">
-                        <CardContent className="py-6">
-                            <div className="text-blue-200 dark:text-blue-400">No hay registros de glucosa aún</div>
-                            <div className="text-sm text-blue-200 dark:text-blue-400 mt-2">Registra tu primera medición presionando el botón de + abajo</div>
-                        </CardContent>
-                    </Card>
+                    /* Estado vacío: sin registros de glucosa */
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-blue-100 dark:border-gray-800 p-5">
+                        <p className="text-sm text-blue-400 dark:text-blue-400">No hay registros de glucosa aún</p>
+                        <p className="text-xs text-blue-300 dark:text-blue-500 mt-1">Registra tu primera medición presionando el botón + abajo</p>
+                    </div>
                 )}
-                {/* Botón de Tendencias */}
+                {/* ── Botón de Tendencias ── */}
                 <button
                     onClick={() => setCurrentView('trends')}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all active:scale-98 flex items-center justify-between cursor-pointer"
-                    >
-                    <div className="flex items-center gap-3">
-                        <TrendingUp className="w-6 h-6" />
-                        <div className="text-left">
-                        <div className="text-lg">Ver Tendencias</div>
-                        <div className="text-sm opacity-90">Gráficos de los últimos 30 días</div>
-                        </div>
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl px-5 py-4 shadow-md hover:shadow-lg transition-all flex items-center gap-4 cursor-pointer"
+                >
+                    {/* Icono en círculo */}
+                    <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl">→</div>
+                    <div className="text-left flex-1">
+                        <div className="font-semibold text-sm">Ver Tendencias y Gráficos Completos</div>
+                        <div className="text-xs opacity-80 mt-0.5">Historial detallado de los últimos 30 días</div>
+                    </div>
+                    <span className="text-lg opacity-75">→</span>
                 </button>
-
-                {/* Presión Arterial */}
-                {latestPressureReading && latestPressureReading.pressure && (
-                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6">
-                    <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-black dark:text-white">Presión Arterial</h2>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {(() => {
-                            const date = new Date(latestPressureReading.timestamp);
-                            const now = new Date();
-                            const timeZone = 'America/Mexico_City';
-                            const isDifferentDay = date.toLocaleDateString('en-CA', { timeZone }) !== now.toLocaleDateString('en-CA', { timeZone });
-                            const time = date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
-                            if (isDifferentDay) {
-                                return date.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: 'short' }) + ' ' + time;
-                            }
-                            return time;
-                        })()}
-                    </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                    <div className="text-3xl text-black dark:text-white">
-                        {latestPressureReading.pressure.systolic}/{latestPressureReading.pressure.diastolic}
-                    </div>
-                    <div className="text-gray-500">mmHg</div>
-                    </div>
-                    <div className="mt-2">
-                    {patientProfile && latestPressureReading.pressure.systolic <= patientProfile.systolic_max && latestPressureReading.pressure.diastolic <= patientProfile.diastolic_max ? (
-                        <span className="text-sm text-green-600">✓ Normal</span>
-                    ) : (
-                        <span className="text-sm text-orange-600">⚠ Elevada</span>
-                    )}
-                    </div>
-                </div>
-                )}
 
                 {/* Historial Reciente */}
                 <HistoryCard 
