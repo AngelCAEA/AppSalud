@@ -6,8 +6,18 @@ import { type ReactNode } from 'react';
 interface PacientLayoutProps {
     /** Contenido principal de la pantalla */
     children: ReactNode;
-    /** Título que se muestra centrado en el header. Por defecto "Mi Salud" */
+    /** Título que se muestra centrado en el header. Por defecto "App Salud" */
     title?: string;
+    /**
+     * Subtítulo opcional debajo del título.
+     * Ejemplo: "Dashboard · Últimos 30 días"
+     */
+    subtitle?: string;
+    /**
+     * Slot izquierdo del header para colocar un botón de regreso u otro control.
+     * Si no se provee, el espacio queda vacío y el título permanece centrado.
+     */
+    leftSlot?: ReactNode;
 }
 
 /**
@@ -24,6 +34,8 @@ interface PacientLayoutProps {
 export default function PacientLayout({
     children,
     title = 'App Salud',
+    subtitle,
+    leftSlot,
 }: PacientLayoutProps) {
     return (
         /* SidebarProvider es requerido por el hook useSidebar que utiliza NavUser internamente.
@@ -34,14 +46,30 @@ export default function PacientLayout({
                 sticky: permanece visible al hacer scroll
                 backdrop-blur: efecto de cristal sobre el contenido que pasa por debajo
                 h-14 en móvil / h-16 en sm+ para dar más respiro en pantallas grandes
+                leftSlot: si se provee, aparece anclado al extremo izquierdo
+                subtitle: si se provee, aparece debajo del título centrado
             ─────────────────────────────────────────────────────────────────── */}
             <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/90 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/90">
                 <div className="relative flex h-14 items-center justify-center px-4 sm:h-16">
-                    {/* Nombre de la app — centrado de forma absoluta para que
-                        no se desplace aunque el UserMenu tenga más o menos ancho */}
-                    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-base font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">
-                        {title}
-                    </span>
+
+                    {/* Slot izquierdo — botón de regreso u otro control opcional */}
+                    {leftSlot && (
+                        <div className="absolute left-4">
+                            {leftSlot}
+                        </div>
+                    )}
+
+                    {/* Título y subtítulo — centrados de forma absoluta */}
+                    <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-center">
+                        <span className="block text-base font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg leading-tight">
+                            {title}
+                        </span>
+                        {subtitle && (
+                            <span className="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                {subtitle}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Menú de usuario — anclado al extremo derecho.
                         NavUser reutiliza el mismo componente del sidebar (DropdownMenu
