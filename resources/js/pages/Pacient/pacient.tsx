@@ -98,7 +98,8 @@ export default function Pacient() {
      * Autenticación : requerida (middleware auth + verified)
      *
      * Flujo:
-     * 1. Activa el indicador de carga (isLoading = true).
+     * 1. Activa el indicador de carga solo si showLoading=true (carga inicial).
+     *    En recargas post-guardado se omite el skeleton para no interrumpir la UX.
      * 2. Solicita todos los registros del usuario al backend via Ziggy route().
      * 3. Mapea la respuesta JSON al tipo interno Reading:
      *    - glucose_value  → glucose
@@ -112,46 +113,48 @@ export default function Pacient() {
      *  - Agregar el campo al modelo HealthRecord (fillable + migración).
      *  - Extender la interfaz Reading con el nuevo campo.
      *  - Mapear el campo aquí en mappedReadings.
+     *
+     * @param showLoading - true en carga inicial, false en refresco post-guardado
      */
-    useEffect(() => {
-        const loadReadings = async () => {
-            try {
-                setIsLoading(true);
+    const loadReadings = async (showLoading = true) => {
+        try {
+            if (showLoading) setIsLoading(true);
 
-                // Ziggy resuelve la ruta nombrada a su URL real, manteniendo
-                // consistencia con las rutas definidas en web.php / api.php
-                const response = await fetch(route('health-records.index'));
-                
-                if (!response.ok) {
-                    throw new Error('Error al cargar los registros');
-                }
-
-                const data = await response.json();
-                
-                // Mapear campos de la API al tipo interno Reading.
-                // Nota: glucose_value puede ser null si el registro es solo de presión;
-                //       systolic/diastolic pueden ser null si el registro es solo glucosa.
-                const mappedReadings: Reading[] = data.map((record: any) => ({
-                    id: record.id.toString(),
-                    glucose: record.glucose_value || null,
-                    pressure: record.systolic && record.diastolic 
-                        ? { systolic: record.systolic, diastolic: record.diastolic }
-                        : null,
-                    type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
-                    timestamp: record.recorded_at || record.created_at,
-                    context_id: record.context_id || undefined,
-                }));
-
-                setReadings(mappedReadings);
-            } catch (error) {
-                console.error('Error cargando registros:', error);
-                // Error silencioso: no interrumpir la UX, las cards mostrarán
-                // el estado vacío en lugar de un error bloqueante.
-            } finally {
-                setIsLoading(false);
+            // Ziggy resuelve la ruta nombrada a su URL real, manteniendo
+            // consistencia con las rutas definidas en web.php / api.php
+            const response = await fetch(route('health-records.index'));
+            
+            if (!response.ok) {
+                throw new Error('Error al cargar los registros');
             }
-        };
 
+            const data = await response.json();
+            
+            // Mapear campos de la API al tipo interno Reading.
+            // Nota: glucose_value puede ser null si el registro es solo de presión;
+            //       systolic/diastolic pueden ser null si el registro es solo glucosa.
+            const mappedReadings: Reading[] = data.map((record: any) => ({
+                id: record.id.toString(),
+                glucose: record.glucose_value || null,
+                pressure: record.systolic && record.diastolic 
+                    ? { systolic: record.systolic, diastolic: record.diastolic }
+                    : null,
+                type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
+                timestamp: record.recorded_at || record.created_at,
+                context_id: record.context_id || undefined,
+            }));
+
+            setReadings(mappedReadings);
+        } catch (error) {
+            console.error('Error cargando registros:', error);
+            // Error silencioso: no interrumpir la UX, las cards mostrarán
+            // el estado vacío en lugar de un error bloqueante.
+        } finally {
+            if (showLoading) setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadReadings();
     }, []);
     // Get latest glucose reading
@@ -261,10 +264,9 @@ export default function Pacient() {
 
           if (data.success) {
             showSuccess('Registro guardado exitosamente');
-            // Recarga la página vía Inertia para reflejar el nuevo registro
-            // en todas las secciones (KPI, historial, sparkline) sin perder
-            // el estado de la sesión ni generar una navegación completa.
-            router.reload();
+            // Re-fetcha los registros directamente para actualizar las cards
+            // al instante sin necesidad de un reload completo de página.
+            await loadReadings(false);
           } else {
             showError('Error al guardar el registro. Por favor intenta de nuevo.');
           }
