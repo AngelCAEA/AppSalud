@@ -1,4 +1,5 @@
 import { NavUser } from '@/components/nav-user';
+import { Activity } from 'lucide-react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from 'sonner';
 import { type ReactNode } from 'react';
@@ -60,7 +61,11 @@ export default function PacientLayout({
                     )}
 
                     {/* Título y subtítulo — centrados de forma absoluta */}
-                    <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-center">
+                    <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-center">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600">
+                            <Activity className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
                         <span className="block text-base font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg leading-tight">
                             {title}
                         </span>
@@ -69,6 +74,7 @@ export default function PacientLayout({
                                 {subtitle}
                             </span>
                         )}
+                        </div>
                     </div>
 
                     {/* Menú de usuario — anclado al extremo derecho.

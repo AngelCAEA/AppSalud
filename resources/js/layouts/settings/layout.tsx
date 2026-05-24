@@ -93,9 +93,17 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                 <Separator className="my-6 lg:hidden" />
 
                 <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
-                        {children}
-                    </section>
+                    {isPatient ? (
+                        <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm px-6 py-6 mx-auto">
+                            <section className="max-w-xl space-y-12">
+                                {children}
+                            </section>
+                        </div>
+                    ) : (
+                        <section className="max-w-xl space-y-12">
+                            {children}
+                        </section>
+                    )}
                 </div>
             </div>
         </div>
