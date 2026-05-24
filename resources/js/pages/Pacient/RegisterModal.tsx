@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Droplet, Heart, Save, ArrowLeft } from 'lucide-react';
+import { X, Droplet, Heart, Save, ArrowLeft, Sun, Utensils, Moon, Shuffle } from 'lucide-react';
+import { route } from 'ziggy-js';
 
 interface MeasurementContext {
   id: number;
@@ -23,6 +24,14 @@ interface ContextButtonProps {
   color: 'green' | 'red';
 }
 
+/** Mapa de iconos por slug de contexto de medición */
+const CONTEXT_ICONS: Record<string, React.ReactNode> = {
+  fasting:    <Sun      className="w-4 h-4" />,
+  post_meal:  <Utensils className="w-4 h-4" />,
+  before_bed: <Moon     className="w-4 h-4" />,
+  random:     <Shuffle  className="w-4 h-4" />,
+};
+
 // Componente para los botones de contexto con popover de descripción
 function ContextButton({ context, isSelected, onSelect, color }: ContextButtonProps) {
   const [showPopover, setShowPopover] = useState(false);
@@ -42,7 +51,10 @@ function ContextButton({ context, isSelected, onSelect, color }: ContextButtonPr
             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
         }`}
       >
-        {context.display_name}
+        <span className="flex flex-col items-center gap-1">
+          {CONTEXT_ICONS[context.slug]}
+          {context.display_name}
+        </span>
       </button>
       
       {/* Popover */}
@@ -82,11 +94,26 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
 
   if (!isOpen) return null;
 
-  // Función para cargar los contextos de medición desde la API
+  /**
+   * Carga los contextos de medición disponibles desde la API.
+   *
+   * Ruta Laravel : GET /measurement-contexts  →  measurement-contexts.index
+   * Controlador  : MeasurementContextController@index
+   * Respuesta    : MeasurementContext[]  (id, slug, display_name, description)
+   *
+   * Los contextos se muestran como botones seleccionables (ContextButton) en los
+   * formularios de glucosa y presión arterial para indicar el momento de la toma.
+   *
+   * En caso de fallo de red o error HTTP se carga un set de datos de ejemplo para
+   * que el modal siga siendo operable sin conexión al servidor.
+   *
+   * Para modificar los contextos disponibles edita la tabla `measurement_contexts`
+   * o el seeder correspondiente; no es necesario tocar este componente.
+   */
   const fetchMeasurementContexts = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/measurement-contexts');
+      const response = await fetch(route('measurement-contexts.index'));
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
@@ -170,23 +197,28 @@ export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps)
     <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white dark:bg-gray-800 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 sm:animate-in sm:zoom-in-95">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
-          {step !== 'select' && (
-            <button
-              onClick={handleBack}
-              className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-pointer" />
-            </button>
-          )}
-          <h2 className={`text-blue-600 dark:text-blue-400 ${step === 'select' ? '' : 'ml-auto mr-auto'}`}>
+        <div className="flex items-center p-6 border-b border-gray-100 dark:border-gray-700">
+          {/* Espacio izquierdo: botón de regreso o hueco del mismo ancho para mantener el título centrado */}
+          <div className="w-10 shrink-0">
+            {step !== 'select' && (
+              <button
+                onClick={handleBack}
+                className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-pointer" />
+              </button>
+            )}
+          </div>
+
+          <h2 className="flex-1 text-center text-xl font-semibold text-blue-600 dark:text-blue-400">
             {step === 'select' && 'Registrar Medición'}
             {step === 'glucose' && 'Glucosa'}
             {step === 'pressure' && 'Presión Arterial'}
           </h2>
+
           <button
             onClick={handleClose}
-            className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
+            className="w-10 h-10 shrink-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-pointer" />
           </button>
