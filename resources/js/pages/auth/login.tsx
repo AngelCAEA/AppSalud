@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Activity, Shield, Mail, Lock } from 'lucide-react';
 import { request } from '@/routes/password';
 
 /**
@@ -54,10 +54,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 <div className="flex flex-col justify-center items-center px-6 sm:px-8 md:px-12 py-12 sm:py-16 bg-white">
                     <div className="w-full max-w-md">
                         {/* Encabezado del formulario */}
-                        <div className="mb-8 sm:mb-10">
-                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                                App Salud
-                            </h1>
+                        <div className="mb-8 sm:mb-10 text-center">
+                            <div className="flex items-center justify-center gap-3 mb-2">
+                                <Activity className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" strokeWidth={2.5} />
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                    App Salud
+                                </h1>
+                            </div>
                             <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3">
                                 Bienvenido de vuelta
                             </h2>
@@ -89,17 +92,20 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         >
                                             Correo Electrónico
                                         </Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            name="email"
-                                            required
-                                            autoFocus
-                                            tabIndex={1}
-                                            autoComplete="email"
-                                            placeholder="email@ejemplo.com"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        />
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                name="email"
+                                                required
+                                                autoFocus
+                                                tabIndex={1}
+                                                autoComplete="email"
+                                                placeholder="email@ejemplo.com"
+                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                            />
+                                        </div>
                                         {errors.email && (
                                             <InputError message={errors.email} />
                                         )}
@@ -124,16 +130,19 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                                 </TextLink>
                                             )}
                                         </div>
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            name="password"
-                                            required
-                                            tabIndex={2}
-                                            autoComplete="current-password"
-                                            placeholder="••••••••"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        />
+                                        <div className="relative">
+                                            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                name="password"
+                                                required
+                                                tabIndex={2}
+                                                autoComplete="current-password"
+                                                placeholder="••••••••"
+                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                            />
+                                        </div>
                                         {errors.password && (
                                             <InputError message={errors.password} />
                                         )}
@@ -178,7 +187,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         <p className="text-center text-gray-600 text-xs sm:text-sm mb-4">
                                             ¿No tienes cuenta? Contacta a soporte para crear una.
                                         </p>
-                                        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                                        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
                                             <a
                                                 href="mailto:carrizosaespinoza@gmail.com?subject=Solicitud de cuenta - App Salud"
                                                 className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-sm transition-colors"
@@ -205,7 +214,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 </div>
 
                 {/* SECCIÓN DERECHA - Imagen de Fondo (oculta en móvil/tablet) */}
-                <div className="hidden lg:flex flex-col justify-center items-center relative bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
+                <div className="hidden lg:flex flex-col justify-between items-center relative bg-gradient-to-br from-blue-50 to-blue-100 overflow-hidden">
                     {/* Imagen de fondo */}
                     <div className="absolute inset-0">
                         <img
@@ -218,31 +227,31 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 via-transparent to-blue-900/20"></div>
                     </div>
 
+                    {/* Gradiente azul en la parte inferior como sombreado */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-b from-transparent via-blue-900/20 to-blue-900/60 pointer-events-none"></div>
+
                     {/* Contenido superpuesto en la imagen */}
-                    <div className="relative z-10 text-white text-center px-8 max-w-md">
-                        <div className="mb-6 flex justify-center">
-                            <div className="p-4 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
-                                <svg
-                                    className="w-12 h-12 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 12l2 2 4-4m7.5 3A7.5 7.5 0 110 7.5 7.5 7.5 0 0115 15z"
-                                    />
-                                </svg>
+                    <div className="relative z-10 text-white text-center px-8 max-w-md py-12">
+                        {/* Contenido superior vacío para espaciado */}
+                    </div>
+
+                    {/* Tarjeta de Seguridad - Posicionada en la parte inferior */}
+                    <div className="relative z-20 px-8 max-w-md mb-12">
+                        <div className="p-6 bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-white/20 rounded-xl flex-shrink-0">
+                                    <Shield className="w-6 h-6 text-white" strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-white text-sm sm:text-base mb-1">
+                                        Seguridad y monitoreo inteligente en cada lectura.
+                                    </h3>
+                                    <p className="text-white/80 text-xs sm:text-sm">
+                                        Sistema médico de confianza institucional
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <h3 className="text-2xl font-bold mb-3">
-                            Seguridad y monitoreo inteligente en cada lectura.
-                        </h3>
-                        <p className="text-white/90 text-lg">
-                            Sistema médico de confianza institucional
-                        </p>
                     </div>
                 </div>
             </div>
