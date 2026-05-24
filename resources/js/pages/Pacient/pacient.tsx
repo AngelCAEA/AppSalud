@@ -5,7 +5,8 @@ import { TrendingUp } from 'lucide-react';
 import { FAB } from '@/pages/Pacient/FAB';
 import { RegisterModal } from '@/pages/Pacient/RegisterModal';
 import { HistoryModal } from '@/pages/Pacient/HistoryModal';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 import { useState, useEffect } from 'react';
 import { Toast } from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
@@ -90,14 +91,36 @@ export default function Pacient() {
     }, []);
 
     /**
-     * Cargar registros reales de la API cuando el componente se monta
-     * Este efecto obtiene todos los registros de salud del usuario autenticado
+     * Carga los registros de salud del paciente autenticado desde la API.
+     *
+     * Ruta utilizada: GET health-records.index  → /health-records
+     * Controlador   : HealthRecordsController@index
+     * Autenticación : requerida (middleware auth + verified)
+     *
+     * Flujo:
+     * 1. Activa el indicador de carga (isLoading = true).
+     * 2. Solicita todos los registros del usuario al backend via Ziggy route().
+     * 3. Mapea la respuesta JSON al tipo interno Reading:
+     *    - glucose_value  → glucose
+     *    - systolic/diastolic (si ambos presentes) → pressure { systolic, diastolic }
+     *    - type 'blood_pressure' normalizado a 'pressure'
+     *    - recorded_at con fallback a created_at como timestamp
+     * 4. Almacena el array resultante en el estado readings.
+     * 5. Desactiva el indicador de carga en el bloque finally.
+     *
+     * Para añadir nuevos campos en el futuro:
+     *  - Agregar el campo al modelo HealthRecord (fillable + migración).
+     *  - Extender la interfaz Reading con el nuevo campo.
+     *  - Mapear el campo aquí en mappedReadings.
      */
     useEffect(() => {
         const loadReadings = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('/health-records');
+
+                // Ziggy resuelve la ruta nombrada a su URL real, manteniendo
+                // consistencia con las rutas definidas en web.php / api.php
+                const response = await fetch(route('health-records.index'));
                 
                 if (!response.ok) {
                     throw new Error('Error al cargar los registros');
@@ -105,7 +128,9 @@ export default function Pacient() {
 
                 const data = await response.json();
                 
-                // Mapear datos de la API al tipo Reading
+                // Mapear campos de la API al tipo interno Reading.
+                // Nota: glucose_value puede ser null si el registro es solo de presión;
+                //       systolic/diastolic pueden ser null si el registro es solo glucosa.
                 const mappedReadings: Reading[] = data.map((record: any) => ({
                     id: record.id.toString(),
                     glucose: record.glucose_value || null,
@@ -118,10 +143,10 @@ export default function Pacient() {
                 }));
 
                 setReadings(mappedReadings);
-                console.log('Registros cargados:', mappedReadings);
             } catch (error) {
                 console.error('Error cargando registros:', error);
-                // Mostrar mensaje de error silenciosamente sin interrumpir la UX
+                // Error silencioso: no interrumpir la UX, las cards mostrarán
+                // el estado vacío en lugar de un error bloqueante.
             } finally {
                 setIsLoading(false);
             }
@@ -207,7 +232,7 @@ export default function Pacient() {
           }
 
           // Realizar petición POST al servidor para guardar el registro
-          const response = await fetch('/health-records', {
+          const response = await fetch(route('health-records.store'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -231,26 +256,15 @@ export default function Pacient() {
           // Parsear respuesta JSON del servidor
           const data = await response.json();
 
-          // Crear objeto de lectura para el estado local
-          // Esto nos permite mostrar el registro inmediatamente sin recargar
-          const newReading: Reading = {
-            id: data.data.id.toString(),
-            glucose: glucoseValue,
-            pressure: systolicValue && diastolicValue ? { systolic: systolicValue, diastolic: diastolicValue } : null,
-            type: type === 'glucose' ? 'glucose' : 'pressure',
-            timestamp: data.data.created_at || data.data.recorded_at || new Date().toISOString(),
-            context_id: contextId,
-          };
-
-          // Actualizar lista de registros: agregar el nuevo al inicio
-          setReadings([newReading, ...readings]);
-          
-          // Cerrar modal de registro
+          // Cerrar modal antes de recargar para evitar estado inconsistente
           setIsModalOpen(false);
 
-          // Mostrar mensaje de éxito si la respuesta fue satisfactoria
           if (data.success) {
             showSuccess('Registro guardado exitosamente');
+            // Recarga la página vía Inertia para reflejar el nuevo registro
+            // en todas las secciones (KPI, historial, sparkline) sin perder
+            // el estado de la sesión ni generar una navegación completa.
+            router.reload();
           } else {
             showError('Error al guardar el registro. Por favor intenta de nuevo.');
           }

@@ -1,4 +1,4 @@
-import { X, Droplet, Heart, Filter } from 'lucide-react';
+import { X, Activity, Heart, Filter } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 interface Reading {
@@ -80,50 +80,56 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-2xl max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-blue-600 dark:text-blue-400">Historial de registros</h2>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
+      <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
+
+        {/* ── Header ──────────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex-1" />
+          <h2 className="flex-1 text-center text-xl font-bold text-gray-900 dark:text-white">
+            Historial de registros
+          </h2>
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            </button>
+          </div>
         </div>
 
-        {/* Filtros de Fecha */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-            <div className="flex-1 w-full">
-              <label className="block text-sm text-black dark:text-white mb-2">Desde</label>
+        {/* ── Filtros de fecha ─────────────────────────────────────────────── */}
+        <div className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-6 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Desde</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="flex-1 w-full">
-              <label className="block text-sm text-black dark:text-white mb-2">Hasta</label>
+            <div className="flex-1">
+              <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Hasta</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <button
               onClick={handleFilter}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
-              <Filter className="w-4 h-4" />
+              <Filter className="h-4 w-4" />
               Filtrar
             </button>
           </div>
-          
+
           {(appliedStartDate || appliedEndDate) && (
-            <div className="mt-3 text-sm text-black dark:text-white flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>Mostrando {filteredReadings.length} de {readings.length} registros</span>
               <button
                 onClick={() => {
@@ -133,155 +139,107 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
                   setAppliedEndDate('');
                   setCurrentPage(1);
                 }}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+                className="text-blue-500 underline hover:text-blue-400"
               >
-                Limpiar filtros
+                Limpiar
               </button>
             </div>
           )}
         </div>
 
-        {/* Table Content - Scrollable */}
-        <div className="overflow-auto flex-1 p-6">
-          {/* Mobile View - Cards */}
-          <div className="sm:hidden space-y-4">
-            {paginatedReadings.map((reading) => (
-              <div key={reading.id} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between text-sm text-black dark:text-white">
-                  <span>{formatDate(reading.timestamp)}</span>
-                  <span className="text-gray-500 dark:text-gray-400">{formatTime(reading.timestamp)}</span>
+        {/* ── Lista de registros ───────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          {paginatedReadings.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
+              <p className="text-base">No hay registros disponibles</p>
+            </div>
+          ) : (
+            paginatedReadings.map((reading) => (
+              <div
+                key={reading.id}
+                className="flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-800 px-5 py-4"
+              >
+                {/* Fecha y hora */}
+                <div className="w-28 shrink-0">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">
+                    {formatDate(reading.timestamp)}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {formatTime(reading.timestamp)}
+                  </p>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white dark:bg-gray-600 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Presión Arterial</div>
-                    {reading.pressure !== null ? (
-                      <div className={`text-lg ${getPressureColor(reading.pressure.systolic, reading.pressure.diastolic)}`}>
-                        {reading.pressure.systolic}/{reading.pressure.diastolic}
-                        <span className="text-xs ml-1">mmHg</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400 dark:text-gray-500">—</span>
-                    )}
-                  </div>
 
-                  <div className="bg-white dark:bg-gray-600 rounded-lg p-3">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Glucosa</div>
-                    {reading.glucose !== null ? (
-                      <div className={`text-lg ${getGlucoseColor(reading.glucose)}`}>
-                        {reading.glucose}
-                        <span className="text-xs ml-1">mg/dL</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400 dark:text-gray-500">—</span>
-                    )}
-                  </div>
+                {/* Presión */}
+                <div className="flex-1 flex justify-center">
+                  {reading.pressure !== null ? (
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold
+                      ${getPressureColor(reading.pressure.systolic, reading.pressure.diastolic) === 'text-orange-600'
+                        ? 'border-orange-400/40 bg-orange-900/20 text-orange-400 dark:border-orange-500/40 dark:bg-orange-900/30 dark:text-orange-400'
+                        : 'border-emerald-400/40 bg-emerald-900/20 text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      }`}
+                    >
+                      <Heart className="h-3.5 w-3.5" />
+                      {reading.pressure.systolic}/{reading.pressure.diastolic}
+                      <span className="text-xs font-normal opacity-75">mmHg</span>
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400 dark:text-gray-500">Sin lectura</span>
+                  )}
+                </div>
+
+                {/* Glucosa */}
+                <div className="flex-1 flex justify-center">
+                  {reading.glucose !== null ? (
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold
+                      ${getGlucoseColor(reading.glucose) === 'text-red-600'
+                        ? 'border-red-400/40 bg-red-900/20 text-red-500 dark:border-red-500/40 dark:bg-red-900/30 dark:text-red-400'
+                        : getGlucoseColor(reading.glucose) === 'text-amber-600'
+                        ? 'border-amber-400/40 bg-amber-900/20 text-amber-600 dark:border-amber-500/40 dark:bg-amber-900/30 dark:text-amber-400'
+                        : 'border-emerald-400/40 bg-emerald-900/20 text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      }`}
+                    >
+                      <Activity className="h-3.5 w-3.5" />
+                      {reading.glucose}
+                      <span className="text-xs font-normal opacity-75">mg/dL</span>
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400 dark:text-gray-500">Sin lectura</span>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Desktop View - Table */}
-          <div className="hidden sm:block">
-            <table className="w-full">
-              <thead className="border-b-2 border-gray-200 dark:border-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm text-black dark:text-white">
-                    Fecha
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm text-black dark:text-white">
-                    Hora
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm text-black dark:text-white">
-                    Presión Arterial
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm text-black dark:text-white">
-                    Glucosa
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {paginatedReadings.map((reading) => (
-                  <tr key={reading.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-black dark:text-white">{formatDate(reading.timestamp)}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">{formatTime(reading.timestamp)}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      {reading.pressure !== null ? (
-                        <div className="flex items-center gap-2">
-                          <Heart className={`w-4 h-4 ${getPressureColor(reading.pressure.systolic, reading.pressure.diastolic)}`} />
-                          <span className={`${getPressureColor(reading.pressure.systolic, reading.pressure.diastolic)}`}>
-                            {reading.pressure.systolic}/{reading.pressure.diastolic}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">mmHg</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      {reading.glucose !== null ? (
-                        <div className="flex items-center gap-2">
-                          <Droplet className={`w-4 h-4 ${getGlucoseColor(reading.glucose)}`} />
-                          <span className={`${getGlucoseColor(reading.glucose)}`}>
-                            {reading.glucose}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">mg/dL</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400 dark:text-gray-500">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Empty State */}
-          {filteredReadings.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
-              <p className="text-lg">No hay registros disponibles</p>
-            </div>
+            ))
           )}
         </div>
 
-        {/* Pagination */}
+        {/* ── Paginación ───────────────────────────────────────────────────── */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-black dark:text-white">
-                Página {currentPage} de {totalPages} • Mostrando {startIndex + 1} - {Math.min(endIndex, readings.length)} de {readings.length} registros
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                    currentPage === 1
-                      ? 'text-gray-300 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
-                      : 'text-black dark:text-white bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
-                  }`}
-                >
-                  Anterior
-                </button>
-
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                    currentPage === totalPages
-                      ? 'text-gray-300 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 cursor-not-allowed'
-                      : 'text-black dark:text-white bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
-                  }`}
-                >
-                  Siguiente
-                </button>
-              </div>
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-6 py-4">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              Página {currentPage} de {totalPages} · {startIndex + 1}–{Math.min(endIndex, filteredReadings.length)} de {filteredReadings.length}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+                  currentPage === 1
+                    ? 'cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600'
+                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+                  currentPage === totalPages
+                    ? 'cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600'
+                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                Siguiente
+              </button>
             </div>
           </div>
         )}
