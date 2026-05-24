@@ -188,23 +188,23 @@ export default function Pacient() {
           // Validar glucosa
           if (glucoseValue !== null) {
             if (glucoseValue < patientProfile!.glucose_min) {
-              showError(`⚠️ Glucosa baja: ${glucoseValue} mg/dL (mínimo recomendado: ${patientProfile!.glucose_min})`);
+              showError(`Glucosa baja: ${glucoseValue} mg/dL (mínimo recomendado: ${patientProfile!.glucose_min})`);
             } else if (glucoseValue > patientProfile!.glucose_max) {
-              showError(`⚠️ Glucosa alta: ${glucoseValue} mg/dL (máximo recomendado: ${patientProfile!.glucose_max})`);
+              showError(`Glucosa alta: ${glucoseValue} mg/dL (máximo recomendado: ${patientProfile!.glucose_max})`);
             }
           }
 
           // Validar presión sistólica
           if (systolicValue !== null) {
             if (systolicValue > patientProfile!.systolic_max) {
-              showError(`⚠️ Presión sistólica elevada: ${systolicValue} mmHg (máximo recomendado: ${patientProfile!.systolic_max})`);
+              showError(`Presión sistólica elevada: ${systolicValue} mmHg (máximo recomendado: ${patientProfile!.systolic_max})`);
             }
           }
 
           // Validar presión diastólica
           if (diastolicValue !== null) {
             if (diastolicValue > patientProfile!.diastolic_max) {
-              showError(`⚠️ Presión diastólica elevada: ${diastolicValue} mmHg (máximo recomendado: ${patientProfile!.diastolic_max})`);
+              showError(`Presión diastólica elevada: ${diastolicValue} mmHg (máximo recomendado: ${patientProfile!.diastolic_max})`);
             }
           }
         }
