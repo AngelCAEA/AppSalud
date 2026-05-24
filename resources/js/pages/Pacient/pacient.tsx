@@ -1,24 +1,17 @@
 import { GlucoseKPI } from '@/pages/Pacient/CardGlucoseKPI';
 import { TrendsScreen } from '@/pages/Pacient/TrendsScreen';
 import { HistoryCard } from '@/pages/Pacient/HistoryCard';
-import { Activity, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { FAB } from '@/pages/Pacient/FAB';
 import { RegisterModal } from '@/pages/Pacient/RegisterModal';
 import { HistoryModal } from '@/pages/Pacient/HistoryModal';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 import { useState, useEffect } from 'react';
-import { UserMenu } from '@/pages/Pacient/UserMenu';
 import { Toast } from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { type SharedData } from '@/types';
-import AppLayout from '@/layouts/app-layout';
-import { pacient } from '@/routes';
-import { Card, CardContent } from '@/components/ui/card';
-
-const breadcrumbs = [
-  { title: 'Paciente', 
-    href: pacient().url },
-];
+import PacientLayout from '@/layouts/pacient-layout';
 
 interface Reading {
   id: string;
@@ -98,43 +91,70 @@ export default function Pacient() {
     }, []);
 
     /**
-     * Cargar registros reales de la API cuando el componente se monta
-     * Este efecto obtiene todos los registros de salud del usuario autenticado
+     * Carga los registros de salud del paciente autenticado desde la API.
+     *
+     * Ruta utilizada: GET health-records.index  → /health-records
+     * Controlador   : HealthRecordsController@index
+     * Autenticación : requerida (middleware auth + verified)
+     *
+     * Flujo:
+     * 1. Activa el indicador de carga solo si showLoading=true (carga inicial).
+     *    En recargas post-guardado se omite el skeleton para no interrumpir la UX.
+     * 2. Solicita todos los registros del usuario al backend via Ziggy route().
+     * 3. Mapea la respuesta JSON al tipo interno Reading:
+     *    - glucose_value  → glucose
+     *    - systolic/diastolic (si ambos presentes) → pressure { systolic, diastolic }
+     *    - type 'blood_pressure' normalizado a 'pressure'
+     *    - recorded_at con fallback a created_at como timestamp
+     * 4. Almacena el array resultante en el estado readings.
+     * 5. Desactiva el indicador de carga en el bloque finally.
+     *
+     * Para añadir nuevos campos en el futuro:
+     *  - Agregar el campo al modelo HealthRecord (fillable + migración).
+     *  - Extender la interfaz Reading con el nuevo campo.
+     *  - Mapear el campo aquí en mappedReadings.
+     *
+     * @param showLoading - true en carga inicial, false en refresco post-guardado
      */
-    useEffect(() => {
-        const loadReadings = async () => {
-            try {
-                setIsLoading(true);
-                const response = await fetch('/health-records');
-                
-                if (!response.ok) {
-                    throw new Error('Error al cargar los registros');
-                }
+    const loadReadings = async (showLoading = true) => {
+        try {
+            if (showLoading) setIsLoading(true);
 
-                const data = await response.json();
-                
-                // Mapear datos de la API al tipo Reading
-                const mappedReadings: Reading[] = data.map((record: any) => ({
-                    id: record.id.toString(),
-                    glucose: record.glucose_value || null,
-                    pressure: record.systolic && record.diastolic 
-                        ? { systolic: record.systolic, diastolic: record.diastolic }
-                        : null,
-                    type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
-                    timestamp: record.recorded_at || record.created_at,
-                    context_id: record.context_id || undefined,
-                }));
-
-                setReadings(mappedReadings);
-                console.log('Registros cargados:', mappedReadings);
-            } catch (error) {
-                console.error('Error cargando registros:', error);
-                // Mostrar mensaje de error silenciosamente sin interrumpir la UX
-            } finally {
-                setIsLoading(false);
+            // Ziggy resuelve la ruta nombrada a su URL real, manteniendo
+            // consistencia con las rutas definidas en web.php / api.php
+            const response = await fetch(route('health-records.index'));
+            
+            if (!response.ok) {
+                throw new Error('Error al cargar los registros');
             }
-        };
 
+            const data = await response.json();
+            
+            // Mapear campos de la API al tipo interno Reading.
+            // Nota: glucose_value puede ser null si el registro es solo de presión;
+            //       systolic/diastolic pueden ser null si el registro es solo glucosa.
+            const mappedReadings: Reading[] = data.map((record: any) => ({
+                id: record.id.toString(),
+                glucose: record.glucose_value || null,
+                pressure: record.systolic && record.diastolic 
+                    ? { systolic: record.systolic, diastolic: record.diastolic }
+                    : null,
+                type: record.type === 'glucose' ? 'glucose' : record.type === 'blood_pressure' ? 'pressure' : 'both',
+                timestamp: record.recorded_at || record.created_at,
+                context_id: record.context_id || undefined,
+            }));
+
+            setReadings(mappedReadings);
+        } catch (error) {
+            console.error('Error cargando registros:', error);
+            // Error silencioso: no interrumpir la UX, las cards mostrarán
+            // el estado vacío en lugar de un error bloqueante.
+        } finally {
+            if (showLoading) setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadReadings();
     }, []);
     // Get latest glucose reading
@@ -168,23 +188,23 @@ export default function Pacient() {
           // Validar glucosa
           if (glucoseValue !== null) {
             if (glucoseValue < patientProfile!.glucose_min) {
-              showError(`⚠️ Glucosa baja: ${glucoseValue} mg/dL (mínimo recomendado: ${patientProfile!.glucose_min})`);
+              showError(`Glucosa baja: ${glucoseValue} mg/dL (mínimo recomendado: ${patientProfile!.glucose_min})`);
             } else if (glucoseValue > patientProfile!.glucose_max) {
-              showError(`⚠️ Glucosa alta: ${glucoseValue} mg/dL (máximo recomendado: ${patientProfile!.glucose_max})`);
+              showError(`Glucosa alta: ${glucoseValue} mg/dL (máximo recomendado: ${patientProfile!.glucose_max})`);
             }
           }
 
           // Validar presión sistólica
           if (systolicValue !== null) {
             if (systolicValue > patientProfile!.systolic_max) {
-              showError(`⚠️ Presión sistólica elevada: ${systolicValue} mmHg (máximo recomendado: ${patientProfile!.systolic_max})`);
+              showError(`Presión sistólica elevada: ${systolicValue} mmHg (máximo recomendado: ${patientProfile!.systolic_max})`);
             }
           }
 
           // Validar presión diastólica
           if (diastolicValue !== null) {
             if (diastolicValue > patientProfile!.diastolic_max) {
-              showError(`⚠️ Presión diastólica elevada: ${diastolicValue} mmHg (máximo recomendado: ${patientProfile!.diastolic_max})`);
+              showError(`Presión diastólica elevada: ${diastolicValue} mmHg (máximo recomendado: ${patientProfile!.diastolic_max})`);
             }
           }
         }
@@ -215,7 +235,7 @@ export default function Pacient() {
           }
 
           // Realizar petición POST al servidor para guardar el registro
-          const response = await fetch('/health-records', {
+          const response = await fetch(route('health-records.store'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -239,26 +259,14 @@ export default function Pacient() {
           // Parsear respuesta JSON del servidor
           const data = await response.json();
 
-          // Crear objeto de lectura para el estado local
-          // Esto nos permite mostrar el registro inmediatamente sin recargar
-          const newReading: Reading = {
-            id: data.data.id.toString(),
-            glucose: glucoseValue,
-            pressure: systolicValue && diastolicValue ? { systolic: systolicValue, diastolic: diastolicValue } : null,
-            type: type === 'glucose' ? 'glucose' : 'pressure',
-            timestamp: data.data.created_at || data.data.recorded_at || new Date().toISOString(),
-            context_id: contextId,
-          };
-
-          // Actualizar lista de registros: agregar el nuevo al inicio
-          setReadings([newReading, ...readings]);
-          
-          // Cerrar modal de registro
+          // Cerrar modal antes de recargar para evitar estado inconsistente
           setIsModalOpen(false);
 
-          // Mostrar mensaje de éxito si la respuesta fue satisfactoria
           if (data.success) {
             showSuccess('Registro guardado exitosamente');
+            // Re-fetcha los registros directamente para actualizar las cards
+            // al instante sin necesidad de un reload completo de página.
+            await loadReadings(false);
           } else {
             showError('Error al guardar el registro. Por favor intenta de nuevo.');
           }
@@ -273,7 +281,7 @@ export default function Pacient() {
         return <TrendsScreen readings={readings} patientProfile={patientProfile} onBack={() => setCurrentView('dashboard')} />;
     }
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <PacientLayout>
             <Head title="Paciente" />
 
             {/* Toast Container */}
@@ -290,74 +298,55 @@ export default function Pacient() {
               ))}
             </div>
 
-            {/* Main Content */}
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                {/* KPI Central de Glucosa */}
+            {/* Main Content — ancho máximo fijo centrado para que las cards
+                no se expandan al 100% en pantallas grandes */}
+            <div className="w-full max-w-lg mx-auto flex flex-col gap-4 p-4">
+
+                {/* ── Resumen de Salud (Glucosa + Presión en una sola card) ─── */}
                 {isLoading || profileLoading ? (
-                    <Card className="rounded-xl border-2 dark:bg-gray-800">
-                        <CardContent className="p-6">
-                            <div className="animate-pulse text-gray-600 dark:text-gray-300">Cargando registros...</div>
-                        </CardContent>
-                    </Card>
+                    /* Skeleton de carga */
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 animate-pulse">
+                        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+                        <div className="h-20 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                        <div className="h-3 w-20 bg-gray-100 dark:bg-gray-800 rounded" />
+                    </div>
                 ) : latestGlucoseReading ? (
-                    <GlucoseKPI value={latestGlucoseReading.glucose!} timestamp={latestGlucoseReading.timestamp} />
+                    /* Card con glucosa y presión arterial integradas */
+                    <GlucoseKPI
+                        value={latestGlucoseReading.glucose!}
+                        timestamp={latestGlucoseReading.timestamp}
+                        latestPressure={latestPressureReading?.pressure ?? null}
+                        pressureTimestamp={latestPressureReading?.timestamp ?? null}
+                        patientProfile={patientProfile}
+                        /* Últimos 8 registros de glucosa para el sparkline,
+                           del más reciente al más antiguo (el componente los ordena) */
+                        glucoseHistory={readings
+                            .filter(r => r.glucose !== null)
+                            .slice(0, 8)
+                            .map(r => ({ value: r.glucose!, timestamp: r.timestamp }))}
+                    />
                 ) : (
-                    <Card className="rounded-xl border-2 dark:border-blue-200 dark:bg-gray-800">
-                        <CardContent className="py-6">
-                            <div className="text-blue-200 dark:text-blue-400">No hay registros de glucosa aún</div>
-                            <div className="text-sm text-blue-200 dark:text-blue-400 mt-2">Registra tu primera medición presionando el botón de + abajo</div>
-                        </CardContent>
-                    </Card>
+                    /* Estado vacío: sin registros de glucosa */
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-blue-100 dark:border-gray-800 p-5">
+                        <p className="text-sm text-blue-400 dark:text-blue-400">No hay registros de glucosa aún</p>
+                        <p className="text-xs text-blue-300 dark:text-blue-500 mt-1">Registra tu primera medición presionando el botón + abajo</p>
+                    </div>
                 )}
-                {/* Botón de Tendencias */}
+                {/* ── Botón de Tendencias ── */}
                 <button
                     onClick={() => setCurrentView('trends')}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all active:scale-98 flex items-center justify-between cursor-pointer"
-                    >
-                    <div className="flex items-center gap-3">
-                        <TrendingUp className="w-6 h-6" />
-                        <div className="text-left">
-                        <div className="text-lg">Ver Tendencias</div>
-                        <div className="text-sm opacity-90">Gráficos de los últimos 30 días</div>
-                        </div>
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl px-5 py-4 shadow-md hover:shadow-lg transition-all flex items-center gap-4 cursor-pointer"
+                >
+                    {/* Icono en círculo */}
+                    <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl">→</div>
+                    <div className="text-left flex-1">
+                        <div className="font-semibold text-sm">Ver Tendencias y Gráficos Completos</div>
+                        <div className="text-xs opacity-80 mt-0.5">Historial detallado de los últimos 30 días</div>
+                    </div>
+                    <span className="text-lg opacity-75">→</span>
                 </button>
-
-                {/* Presión Arterial */}
-                {latestPressureReading && latestPressureReading.pressure && (
-                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-md p-6">
-                    <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-black dark:text-white">Presión Arterial</h2>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {(() => {
-                            const date = new Date(latestPressureReading.timestamp);
-                            const now = new Date();
-                            const timeZone = 'America/Mexico_City';
-                            const isDifferentDay = date.toLocaleDateString('en-CA', { timeZone }) !== now.toLocaleDateString('en-CA', { timeZone });
-                            const time = date.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
-                            if (isDifferentDay) {
-                                return date.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: 'short' }) + ' ' + time;
-                            }
-                            return time;
-                        })()}
-                    </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                    <div className="text-3xl text-black dark:text-white">
-                        {latestPressureReading.pressure.systolic}/{latestPressureReading.pressure.diastolic}
-                    </div>
-                    <div className="text-gray-500">mmHg</div>
-                    </div>
-                    <div className="mt-2">
-                    {patientProfile && latestPressureReading.pressure.systolic <= patientProfile.systolic_max && latestPressureReading.pressure.diastolic <= patientProfile.diastolic_max ? (
-                        <span className="text-sm text-green-600">✓ Normal</span>
-                    ) : (
-                        <span className="text-sm text-orange-600">⚠ Elevada</span>
-                    )}
-                    </div>
-                </div>
-                )}
 
                 {/* Historial Reciente */}
                 <HistoryCard 
@@ -384,6 +373,6 @@ export default function Pacient() {
                 readings={readings}
             />
 
-        </AppLayout>
+        </PacientLayout>
     );
 }
