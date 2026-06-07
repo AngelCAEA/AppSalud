@@ -79,9 +79,10 @@ export default function PacientLayout({
 
                     {/* Menú de usuario — anclado al extremo derecho.
                         NavUser reutiliza el mismo componente del sidebar (DropdownMenu
-                        con UserInfo + UserMenuContent) para consistencia visual. */}
+                        con UserInfo + UserMenuContent) para consistencia visual.
+                        hideNameOnMobile: oculta el nombre en pantallas móviles y tablets. */}
                     <div className="ml-auto">
-                        <NavUser />
+                        <NavUser hideNameOnMobile={true} />
                     </div>
                 </div>
             </header>
