@@ -8,8 +8,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle, Activity, Shield, Mail, Lock } from 'lucide-react';
+import { LoaderCircle, Activity, Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { request } from '@/routes/password';
+import { useState } from 'react';
 
 /**
  * Props para el componente Login
@@ -43,6 +44,12 @@ interface LoginProps {
 export default function Login({ status, canResetPassword }: LoginProps) {
     // URL de la imagen de fondo desde Unsplash
     const backgroundImageUrl = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920';
+
+    /**
+     * Estado para controlar la visibilidad de la contraseña
+     * @type {[boolean, Function]}
+     */
+    const [showPassword, setShowPassword] = useState(false);
 
     return (
         <div className="min-h-screen bg-white overflow-hidden">
@@ -134,14 +141,28 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                             <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                                             <Input
                                                 id="password"
-                                                type="password"
+                                                type={showPassword ? 'text' : 'password'}
                                                 name="password"
                                                 required
                                                 tabIndex={2}
                                                 autoComplete="current-password"
                                                 placeholder="••••••••"
-                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                             />
+                                            {/* Botón para mostrar/ocultar contraseña */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                                tabIndex={-1}
+                                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff className="w-5 h-5" />
+                                                ) : (
+                                                    <Eye className="w-5 h-5" />
+                                                )}
+                                            </button>
                                         </div>
                                         {errors.password && (
                                             <InputError message={errors.password} />
