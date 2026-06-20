@@ -8,11 +8,10 @@
 // Components
 import PasswordResetLinkController from '@/actions/App/Http/Controllers/Auth/PasswordResetLinkController';
 import { login } from '@/routes';
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import { LoaderCircle, Activity, Mail, ArrowLeft } from 'lucide-react';
 
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -143,19 +142,13 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                     </Button>
 
                                     {/* Botón para volver al login */}
-                                    <Button
-                                        type="button"
-                                        asChild
-                                        className="w-full py-2.5 sm:py-3 bg-transparent text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-all duration-200 text-xs sm:text-sm"
+                                    <Link
+                                        href={login()}
+                                        className="w-full py-2.5 sm:py-3 inline-flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300 font-semibold rounded-lg text-xs sm:text-sm no-underline"
                                     >
-                                        <TextLink 
-                                            href={login()}
-                                            className="inline-flex items-center justify-center gap-2"
-                                        >
-                                            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                            Volver al inicio de sesión
-                                        </TextLink>
-                                    </Button>
+                                        <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                        Volver al inicio de sesión
+                                    </Link>
                                 </div>
                             </>
                         )}
