@@ -30,7 +30,7 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: Shield
     },{
-        title:'Paciente',
+        title:'Medicion de salud',
         href: pacient(),
         icon: BookOpen
     }
@@ -57,12 +57,12 @@ export function AppSidebar() {
         const roleId = auth.user?.role_id;
         
         if (roleId === 1) {
-            // Paciente: solo Paciente
-            return mainNavItems.filter(item => item.title === 'Paciente');
+            // Paciente: solo Medicion de salud
+            return mainNavItems.filter(item => item.title === 'Medicion de salud');
         } else if (roleId === 2) {
-            // Clinician: Panel de pacientes y Reportes
+            // Clinician: Panel de pacientes, reportes y medicion de salud
             return mainNavItems.filter(item => 
-                item.title === 'Panel de pacientes' || item.title === 'Reportes'
+                item.title === 'Panel de pacientes' || item.title === 'Reportes' || item.title === 'Medicion de salud'
             );
         } else if (roleId === 3) {
             // Admin: todos

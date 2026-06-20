@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified', 'role:3'])->group(function () {
     Route::patch('dashboard/users/{user}/role', [DashboardController::class, 'assignRole'])->name('assignRole');
 });
 
-Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pacient', function () {
         return Inertia::render('Pacient/pacient');
     })->name('pacient');

@@ -16,7 +16,7 @@ import { edit } from '@/routes/profile';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: 'Configuración de perfil',
         href: edit().url,
     },
 ];
@@ -24,9 +24,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Profile({
     mustVerifyEmail,
     status,
+    roleName,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
+    roleName?: string;
 }) {
     const { auth } = usePage<SharedData>().props;
 
@@ -37,8 +39,8 @@ export default function Profile({
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Profile information"
-                        description="Update your name and email address"
+                        title="Información del perfil"
+                        description="Actualiza tu nombre y dirección de correo electrónico"
                     />
 
                     <Form
@@ -50,8 +52,20 @@ export default function Profile({
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
+                                {roleName && (
+                                    <div className="grid gap-2">
+                                        <Label>Rol</Label>
+                                        <Input
+                                            className="mt-1 block w-full bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                                            value={roleName}
+                                            readOnly
+                                            disabled
+                                        />
+                                    </div>
+                                )}
+
                                 <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
+                                    <Label htmlFor="name">Nombre</Label>
 
                                     <Input
                                         id="name"
@@ -60,7 +74,7 @@ export default function Profile({
                                         name="name"
                                         required
                                         autoComplete="name"
-                                        placeholder="Full name"
+                                        placeholder="Nombre completo"
                                     />
 
                                     <InputError
@@ -70,7 +84,7 @@ export default function Profile({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
+                                    <Label htmlFor="email">Correo electrónico</Label>
 
                                     <Input
                                         id="email"
@@ -80,7 +94,7 @@ export default function Profile({
                                         name="email"
                                         required
                                         autoComplete="username"
-                                        placeholder="Email address"
+                                        placeholder="Correo electrónico"
                                     />
 
                                     <InputError
@@ -93,35 +107,33 @@ export default function Profile({
                                     auth.user.email_verified_at === null && (
                                         <div>
                                             <p className="-mt-4 text-sm text-muted-foreground">
-                                                Your email address is
-                                                unverified.{' '}
+                                                Tu dirección de correo electrónico no está verificada.{' '}
                                                 <Link
                                                     href={send()}
                                                     as="button"
                                                     className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                                                 >
-                                                    Click here to resend the
-                                                    verification email.
+                                                    Haz clic aquí para reenviar el
+                                                    correo de verificación.
                                                 </Link>
                                             </p>
 
                                             {status ===
                                                 'verification-link-sent' && (
                                                 <div className="mt-2 text-sm font-medium text-green-600">
-                                                    A new verification link has
-                                                    been sent to your email
-                                                    address.
+                                                    Se ha enviado un nuevo enlace de verificación a tu dirección de correo electrónico.
                                                 </div>
                                             )}
                                         </div>
                                     )}
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 ">
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 text-xs sm:text-sm"
                                     >
-                                        Save
+                                        Guardar
                                     </Button>
 
                                     <Transition
@@ -132,7 +144,7 @@ export default function Profile({
                                         leaveTo="opacity-0"
                                     >
                                         <p className="text-sm text-neutral-600">
-                                            Saved
+                                            Guardar
                                         </p>
                                     </Transition>
                                 </div>

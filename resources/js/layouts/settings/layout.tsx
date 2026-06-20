@@ -10,22 +10,22 @@ import { pacient } from '@/routes';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Perfil',
         href: '/settings/profile',
         icon: null,
     },
     {
-        title: 'Password',
+        title: 'Contraseña',
         href: '/settings/password',
         icon: null,
     },
     {
-        title: 'Two-Factor Auth',
+        title: 'Autenticación de Dos Factores',
         href: '/settings/two-factor',
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: 'Apariencia',
         href: '/settings/appearance',
         icon: null,
     },
@@ -40,8 +40,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const currentPath = window.location.pathname;
     const { auth } = usePage<SharedData>().props;
 
-    /** role_id 3 = Paciente — muestra botón de regreso a su pantalla principal */
-    const isPatient = auth.user?.role_id === 3;
+    /** role_id 1 = Paciente — muestra botón de regreso a su pantalla principal */
+    const isPatient = auth.user?.role_id === 1;
 
     return (
         <div className="px-4 py-6">
@@ -57,8 +57,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     </Link>
                 )}
                 <Heading
-                    title="Settings"
-                    description="Manage your profile and account settings"
+                    title="Configuración"
+                    description="Gestiona tu perfil y la configuración de tu cuenta"
                 />
             </div>
 
