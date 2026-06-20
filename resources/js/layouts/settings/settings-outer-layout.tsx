@@ -12,7 +12,7 @@ interface SettingsOuterLayoutProps {
 /**
  * Layout exterior condicional para las páginas de Settings.
  *
- * - role_id === 3 (Paciente): usa PacientLayout (header superior, sin sidebar)
+ * - role_id === 1 (Paciente): usa PacientLayout (header superior, sin sidebar)
  * - Cualquier otro rol:        usa AppLayout estándar (con sidebar)
  *
  * Reemplaza el uso directo de AppLayout en cada página de settings,
@@ -23,7 +23,7 @@ export default function SettingsOuterLayout({
     breadcrumbs,
 }: SettingsOuterLayoutProps) {
     const { auth } = usePage<SharedData>().props;
-    const isPatient = auth.user?.role_id === 3;
+    const isPatient = auth.user?.role_id === 1;
 
     if (isPatient) {
         return <PacientLayout>{children}</PacientLayout>;

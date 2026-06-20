@@ -24,9 +24,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Profile({
     mustVerifyEmail,
     status,
+    roleName,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
+    roleName?: string;
 }) {
     const { auth } = usePage<SharedData>().props;
 
@@ -37,8 +39,8 @@ export default function Profile({
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall
-                        title="Profile information"
-                        description="Update your name and email address"
+                        title="Información del perfil"
+                        description="Actualiza tu nombre y dirección de correo electrónico"
                     />
 
                     <Form
@@ -50,6 +52,18 @@ export default function Profile({
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
+                                {roleName && (
+                                    <div className="grid gap-2">
+                                        <Label>Rol</Label>
+                                        <Input
+                                            className="mt-1 block w-full bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                                            value={roleName}
+                                            readOnly
+                                            disabled
+                                        />
+                                    </div>
+                                )}
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Name</Label>
 
@@ -116,12 +130,13 @@ export default function Profile({
                                         </div>
                                     )}
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 ">
                                     <Button
                                         disabled={processing}
                                         data-test="update-profile-button"
+                                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 text-xs sm:text-sm"
                                     >
-                                        Save
+                                        Guardar
                                     </Button>
 
                                     <Transition
@@ -132,7 +147,7 @@ export default function Profile({
                                         leaveTo="opacity-0"
                                     >
                                         <p className="text-sm text-neutral-600">
-                                            Saved
+                                            Guardar
                                         </p>
                                     </Transition>
                                 </div>
