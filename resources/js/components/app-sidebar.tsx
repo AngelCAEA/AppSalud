@@ -8,11 +8,12 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { dashboard, reports, users, pacient} from '@/routes';
 import { SharedData, type NavItem } from '@/types';
 import { Link , usePage} from '@inertiajs/react';
-import { BookOpen, Folder, Users, Shield, Newspaper, Activity } from 'lucide-react';
+import { BookOpen, Folder, Users, Shield, FileSpreadsheet, Activity } from 'lucide-react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -23,7 +24,7 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Reportes',
         href: reports(),
-        icon: Newspaper
+        icon: FileSpreadsheet
     },
     {
         title: 'Dashboard',
@@ -73,6 +74,7 @@ export function AppSidebar() {
     };
     
     const navItems = getNavItems();
+    const { state } = useSidebar();
     
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -81,11 +83,13 @@ export function AppSidebar() {
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton size="lg" asChild>
-                                <Link href={users()} prefetch>
-                                    <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                                        <Activity className="w-6 h-6 text-white" />
+                                <Link href={users()} prefetch className={state === 'collapsed' ? 'justify-center' : ''}>
+                                    <div className="w-8 h-8 flex-shrink-0 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
+                                        <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
                                     </div>
-                                    <span className="font-semibold text-blue-900">App Salud</span>
+                                    {state === 'expanded' && (
+                                        <span className="font-semibold text-blue-900 text-base">App Salud</span>
+                                    )}
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

@@ -4,15 +4,17 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
+    const { state } = useSidebar();
     return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
-            <SidebarMenu className="gap-3">
+        <SidebarGroup className={`py-3 ${state === 'collapsed' ? 'px-3' : 'px-2'}`}>
+            <SidebarGroupLabel className="text-xs font-semibold tracking-widest uppercase">Plataforma</SidebarGroupLabel>
+            <SidebarMenu className="gap-2">
                 {items.map((item) => {
                     const href = typeof item.href === "string" ? item.href : item.href.url;
                     const isActive = page.url === href || page.url.startsWith(`${href}/`);
@@ -23,8 +25,12 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 asChild
                                 isActive={isActive}
                                 tooltip={{ children: item.title }}
-                                className={`rounded-lg transition-colors ${isActive ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
-                                >
+                                className={`h-10 text-sm transition-colors [&>a>svg]:size-[1.15rem] [&>a>svg]:shrink-0 ${
+                                    isActive
+                                        ? 'bg-blue-50 text-blue-600 border-l-[3px] border-blue-500 rounded-r-lg rounded-l-none'
+                                        : 'rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                                }`}
+                            >
                                 <Link href={item.href} prefetch>
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>

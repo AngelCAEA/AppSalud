@@ -28,11 +28,15 @@ export function NavUser({ hideNameOnMobile = false }: { hideNameOnMobile?: boole
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent"
+                            className={`group text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent cursor-pointer ${
+                                state === 'expanded'
+                                    ? 'shadow-sm rounded-lg bg-white dark:bg-sidebar border border-border'
+                                    : 'bg-transparent border-0 shadow-none justify-center mx-auto'
+                            }`}
                             data-test="sidebar-menu-button"
                         >
-                            <UserInfo user={auth.user} hideNameOnMobile={hideNameOnMobile} />
-                            <ChevronsUpDown className="ml-auto size-4" />
+                            <UserInfo user={auth.user} showRole={state === 'expanded'} hideNameOnMobile={hideNameOnMobile} />
+                            {state === 'expanded' && <ChevronsUpDown className="ml-auto size-4" />}
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
