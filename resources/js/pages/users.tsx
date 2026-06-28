@@ -6,13 +6,22 @@ import AppLayout from "@/layouts/app-layout";
 import { useState, useEffect } from "react";
 import { details, reports } from "@/routes";
 import { Card, CardContent } from "@/components/ui/card";
-import { UsersPage, PatientsFilters } from "@/types/user";
+import { UsersPage, PatientsFilters, DistributionData } from "@/types/user";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from '@/components/ui/button';
 
 
 export default function Users({ users, filters, totalPatients, highRisk, noRecords }: UsersPage) {
   const [search, setSearch] = useState(filters.search || "");
   const [activeFilter, setActiveFilter] = useState<PatientsFilters>('all');
+  const [distribution, setDistribution] = useState<DistributionData | null>(null);
+
+  useEffect(() => {
+    fetch(route('users.distribution'))
+      .then((res) => res.json())
+      .then((data: DistributionData) => setDistribution(data))
+      .catch(() => null);
+  }, []);
 
   const getRiskColor = (riskLevel: string) => {
     switch (riskLevel) {
@@ -116,6 +125,127 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
           </div>
 
         </div>
+
+      {/* 📊 Gráficas de Distribución */}
+      {distribution && (
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 mb-6">
+
+          {/* Distribución de Glucosa — Donut */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <p className="text-sm font-bold text-gray-700 mb-4">Distribución de Usuarios - Glucosa</p>
+            <div className="flex items-center gap-6">
+              <div className="w-36 h-36 flex-shrink-0 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Estable', value: distribution.glucose.stable },
+                        { name: 'Medio',   value: distribution.glucose.medium },
+                        { name: 'Alto',    value: distribution.glucose.high   },
+                      ]}
+                      cx="50%" cy="50%"
+                      innerRadius={44} outerRadius={66}
+                      dataKey="value"
+                      startAngle={90} endAngle={-270}
+                    >
+                      <Cell fill="#4ade80" />
+                      <Cell fill="#facc15" />
+                      <Cell fill="#f87171" />
+                    </Pie>
+                    <Tooltip formatter={(v) => [`${v} pacientes`]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Total en el centro de la dona */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-bold text-gray-800 leading-none">{distribution.glucose.total}</span>
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-0.5">TOTAL</span>
+                </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-600">Estable</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{distribution.glucose.stable}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-yellow-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-600">Medio</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{distribution.glucose.medium}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-red-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-600">Alto</span>
+                  </div>
+                  <span className="font-bold text-gray-800">{distribution.glucose.high}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Distribución de Presión Arterial — Barra horizontal apilada */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <p className="text-sm font-bold text-gray-700 mb-4">Distribución de Usuarios - Presión Arterial</p>
+            {distribution.pressure.total > 0 ? (
+              <>
+                {/* Barra apilada */}
+                <div className="flex w-full h-5 rounded-full overflow-hidden mb-5">
+                  {distribution.pressure.normal > 0 && (
+                    <div
+                      className="bg-green-400 transition-all"
+                      style={{ width: `${(distribution.pressure.normal / distribution.pressure.total) * 100}%` }}
+                    />
+                  )}
+                  {distribution.pressure.alert > 0 && (
+                    <div
+                      className="bg-yellow-400 transition-all"
+                      style={{ width: `${(distribution.pressure.alert / distribution.pressure.total) * 100}%` }}
+                    />
+                  )}
+                  {distribution.pressure.high > 0 && (
+                    <div
+                      className="bg-red-400 transition-all"
+                      style={{ width: `${(distribution.pressure.high / distribution.pressure.total) * 100}%` }}
+                    />
+                  )}
+                </div>
+                {/* Leyenda */}
+                <div className="flex items-start justify-around gap-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                      <span className="text-xs text-gray-500">&lt;130/85</span>
+                    </div>
+                    <span className="font-bold text-gray-800 text-sm">{distribution.pressure.normal} <span className="font-normal text-gray-500">pacientes</span></span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                      <span className="text-xs text-gray-500">Alerta</span>
+                    </div>
+                    <span className="font-bold text-gray-800 text-sm">{distribution.pressure.alert} <span className="font-normal text-gray-500">pacientes</span></span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                      <span className="text-xs text-gray-500">&gt;140/90</span>
+                    </div>
+                    <span className="font-bold text-gray-800 text-sm">{distribution.pressure.high} <span className="font-normal text-gray-500">pacientes</span></span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-8">Sin registros de presión arterial</p>
+            )}
+          </div>
+
+        </div>
+      )}
+
       {/* 🔍 Filtros y Buscador */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex gap-2 flex-wrap">
@@ -132,14 +262,14 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
             Sin Registro
           </button>
         </div>
-        <div className="relative">
-          <Input className="rounded-full pl-10 pr-4 w-56 bg-white border-gray-200" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="relative flex-1">
+          <Input className="rounded-full pl-10 pr-4 w-full bg-white border-gray-200" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
       </div>
 
       {/* 📋 Tabla */}
-      <div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
+      <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 mb-8">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -147,7 +277,7 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
                 <th className="py-3 px-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado /<br />Riesgo</th>
                 <th className="py-3 px-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Paciente</th>
                 <th className="py-3 px-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">TIR (30 Días)</th>
-                <th className="py-3 px-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Última<br />Lectura</th>
+                <th className="py-3 px-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Última Lectura<br />de Glucosa</th>
                 <th className="py-3 px-5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Acción</th>
               </tr>
             </thead>
@@ -193,9 +323,9 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
                         <button onClick={() => router.visit(details(user.id))} className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-sm cursor-pointer">
                           Ver Detalles <ArrowRight className="w-4 h-4" />
                         </button>
-                        <button onClick={() => router.visit(route('configuration', user.id))} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm cursor-pointer">
+                        <button onClick={() => router.visit(route('configuration', user.id))} className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm cursor-pointer">
                           <Settings className="w-3.5 h-3.5" />
-                          Configuración
+                          Configuración de perfil
                         </button>
                       </div>
                     </td>
@@ -212,26 +342,7 @@ export default function Users({ users, filters, totalPatients, highRisk, noRecor
           </table>
         </div>
       </div>
-      {/* 📄 Paginación */}
-      <div className="flex items-center justify-between p-3 text-sm">
-        <div className="flex items-center gap-2">
-          {users.links.map((link, index) => (
-            <Link
-              key={index}
-              href={link.url || "#"}
-              className={`
-                px-3 py-1 border rounded-md text-sm transition-colors duration-200 
-                ${link.active
-                  ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500"
-                  : "text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500 dark:hover:bg-blue-900"
-                }
-                ${!link.url ? "opacity-50 cursor-default" : "cursor-pointer"}
-              `}
-              dangerouslySetInnerHTML={{ __html: link.label.replace('Previous', 'Anterior').replace('Next', 'Siguiente') }}
-            />
-          ))}
-        </div>
-      </div>
+
       </div>
     </AppLayout>
   );
