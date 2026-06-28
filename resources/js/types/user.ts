@@ -39,3 +39,22 @@ export interface UsersPage {
   highRisk: number;
   noRecords: number;
 }
+
+export interface GlucoseDistribution {
+  stable: number;
+  medium: number;
+  high: number;
+  total: number;
+}
+
+export interface PressureDistribution {
+  normal: number;
+  alert: number;
+  high: number;
+  total: number;
+}
+
+export interface DistributionData {
+  glucose: GlucoseDistribution;
+  pressure: PressureDistribution;
+}

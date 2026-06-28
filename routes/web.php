@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'role:2'])->group(function () {
     Route::get('/users', [UsersController::class, 'index'])->name('users');
+    Route::get('/users/distribution', [UsersController::class, 'getDistribution'])->name('users.distribution');
 });
 
 Route::middleware(['auth', 'verified', 'role:2'])->group(function () {
