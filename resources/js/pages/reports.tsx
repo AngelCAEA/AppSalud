@@ -3,13 +3,13 @@ import { Head, Link, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import  { route }  from "ziggy-js";
 import * as XLSX from 'xlsx';
-import { Calendar, CheckSquare, Download, FileSpreadsheet, Users, Activity } from "lucide-react";
-type ReportType = 'patients' | 'measurements' | 'summary';
+import { Calendar, CheckSquare, Download, FileSpreadsheet, Users, Activity, TrendingUp, TrendingDown, AlertCircle, Clock } from "lucide-react";
+type ReportType = 'patients' | 'measurements';
 
 export default function Reports(){
     const [reportType, setReportType] = useState<ReportType>('patients');
-    const [dateFrom, setDateFrom] = useState('2026-03-18');
-    const [dateTo, setDateTo] = useState('2026-04-18');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
     const [selectedColumns, setSelectedColumns] = useState<string[]>([
         'name',
         'tir',
@@ -125,14 +125,12 @@ export default function Reports(){
         }
     }, [reportType, dateFrom, dateTo]);
 
-    // Obtener datos de resumen estadístico desde el backend
+    // Obtener datos de resumen estadístico desde el backend (siempre)
     useEffect(() => {
         const fetchSummary = async () => {
             try {
-                setLoading(true);
-                setError(null);
-                
                 if (!validateDates(dateFrom, dateTo)) {
+                    setSummaryData(null);
                     return;
                 }
                 
@@ -147,20 +145,16 @@ export default function Reports(){
                 if (data.success) {
                     setSummaryData(data.data);
                 } else {
-                    setError('No se pudieron cargar los datos de resumen');
+                    setSummaryData(null);
                 }
             } catch (err) {
                 console.error('Error fetching summary:', err);
-                setError(err instanceof Error ? err.message : 'Error desconocido');
-            } finally {
-                setLoading(false);
+                setSummaryData(null);
             }
         };
 
-        if (reportType === 'summary') {
-            fetchSummary();
-        }
-    }, [reportType, dateFrom, dateTo]);
+        fetchSummary();
+    }, [dateFrom, dateTo]);
 
     const currentPatientsData = patientsData.length > 0 ? patientsData : [];
     
@@ -168,8 +162,7 @@ export default function Reports(){
     const hasData = () => {
         if (dateError) return false;
         if (reportType === 'patients') return currentPatientsData.length > 0;
-        if (reportType === 'measurements') return measurementsData.length > 0;
-        return summaryData && summaryData.totalPatients > 0; // para summary
+        return measurementsData.length > 0;
     };
     const handleDownloadExcel = () => {
     let data: any[] = [];
@@ -204,19 +197,6 @@ export default function Reports(){
       }));
       fileName = `Reporte_Mediciones_${new Date().toISOString().split('T')[0]}.xlsx`;
       sheetName = 'Mediciones';
-    } else if (reportType === 'summary' && summaryData) {
-      // Prepare summary data from backend
-      data = [
-        { 'Métrica': 'Total de Pacientes', 'Valor': summaryData.totalPatients },
-        { 'Métrica': 'Pacientes Riesgo Alto', 'Valor': summaryData.highRisk },
-        { 'Métrica': 'Pacientes Inestables', 'Valor': summaryData.unstable },
-        { 'Métrica': 'Pacientes Estables', 'Valor': summaryData.stable },
-        { 'Métrica': 'Pacientes Sin Registro', 'Valor': summaryData.noRecord },
-        { 'Métrica': 'TIR Promedio (%)', 'Valor': summaryData.avgTIR },
-        { 'Métrica': 'Fecha de Reporte', 'Valor': new Date().toLocaleDateString('es-ES') }
-      ];
-      fileName = `Reporte_Resumen_${new Date().toISOString().split('T')[0]}.xlsx`;
-      sheetName = 'Resumen';
     }
 
         // Create workbook and worksheet
@@ -247,22 +227,112 @@ export default function Reports(){
     ];
 
     return (
-        <AppLayout breadcrumbs={[{ title: "Reportes", href: "#" }]}> 
+        <AppLayout breadcrumbs={[{ title: "Resumen estadístico", href: "#" }]}> 
             <Head title="Reportes" />
-             <div className="p-8">
-               <div className="mb-8">
-                    <div className="flex items-center gap-4 mb-6">
+             <div className="pl-8 pr-8">
+                {/* Filters and Download Button */}
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-700 p-6 mb-6 flex items-end gap-4">
+                    <div className="flex-1">
+                        <h2 className="text-gray-600 dark:text-white mb-4">Periodo de análisis</h2>
+                        {dateError && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                                <div className="text-red-800 text-sm">{dateError}</div>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-4">
                         <div>
-                        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">Reportes y Exportación</h1>
-                        <p className="text-gray-600 dark:text-white">Descarga datos de pacientes y mediciones en formato Excel</p>
+                            <label className="block text-gray-600 dark:text-white font-bold mb-2">Fecha inicial</label>
+                            <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500" />
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => handleDateFromChange(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-gray-600 dark:text-white font-bold mb-2">Fecha final</label>
+                            <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500" />
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => handleDateToChange(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            </div>
+                        </div>
                         </div>
                     </div>
+                    <button
+                    onClick={handleDownloadExcel}
+                    disabled={loading || !hasData()}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                        loading || !hasData()
+                            ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+                            : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
+                    }`}
+                    >
+                    <FileSpreadsheet className="w-5 h-5" />
+                    Descargar Excel
+                    </button>
                 </div>
+
+                {/* Summary Cards - Siempre visibles */}
+                {summaryData && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        {/* Total de Pacientes */}
+                        <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-6 border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-1">Total de Pacientes</p>
+                                    <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{summaryData.totalPatients}</p>
+                                </div>
+                                <Users className="w-12 h-12 text-blue-300 dark:text-blue-600" />
+                            </div>
+                        </div>
+
+                        {/* Riesgo Crítico */}
+                        <div className="bg-red-50 dark:bg-red-900 rounded-lg p-6 border border-red-200 dark:border-red-700">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-red-700 dark:text-red-300 text-sm font-medium mb-1">Riesgo Crítico</p>
+                                    <p className="text-3xl font-bold text-red-900 dark:text-red-100">{summaryData.highRisk}</p>
+                                </div>
+                                <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-600" />
+                            </div>
+                        </div>
+
+                        {/* TIR Promedio */}
+                        <div className="bg-green-50 dark:bg-green-900 rounded-lg p-6 border border-green-200 dark:border-green-700">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-green-700 dark:text-green-300 text-sm font-medium mb-1">TIR Promedio</p>
+                                    <p className="text-3xl font-bold text-green-900 dark:text-green-100">{summaryData.avgTIR}%</p>
+                                </div>
+                                <Activity className="w-12 h-12 text-green-300 dark:text-green-600" />
+                            </div>
+                        </div>
+
+                        {/* Sin Registro */}
+                        <div className="bg-orange-50 dark:bg-orange-900 rounded-lg p-6 border border-orange-200 dark:border-orange-700">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-orange-700 dark:text-orange-300 text-sm font-medium mb-1">Sin Registro</p>
+                                    <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">{summaryData.noRecord}</p>
+                                </div>
+                                <Clock className="w-12 h-12 text-orange-300 dark:text-orange-600" />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Report Type Selection */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
                     <h2 className="text-gray-900 dark:text-gray-100 mb-4">Tipo de Reporte</h2>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                     <button
                         onClick={() => setReportType('patients')}
                         className={`p-6 rounded-lg border-2 transition-all ${
@@ -296,59 +366,6 @@ export default function Reports(){
                         Historial completo de mediciones
                         </p>
                     </button>
-
-                    <button
-                        onClick={() => setReportType('summary')}
-                        className={`p-6 rounded-lg border-2 transition-all ${
-                        reportType === 'summary'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                    >
-                        <FileSpreadsheet className={`w-8 h-8 mb-3 mx-auto ${reportType === 'summary' ? 'text-blue-600' : 'text-gray-400'}`} />
-                        <div className={reportType === 'summary' ? 'text-blue-600' : 'text-gray-700'}>
-                        Resumen Estadístico
-                        </div>
-                        <p className="text-gray-500 mt-1">
-                        Métricas y estadísticas generales
-                        </p>
-                    </button>
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                    <h2 className="text-gray-900 dark:text-gray-100 mb-4">Filtros de Fecha</h2>
-                    {dateError && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                            <div className="text-red-800 text-sm">{dateError}</div>
-                        </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-gray-700 mb-2">Fecha Desde</label>
-                        <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                            type="date"
-                            value={dateFrom}
-                            onChange={(e) => handleDateFromChange(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 mb-2">Fecha Hasta</label>
-                        <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                            type="date"
-                            value={dateTo}
-                            onChange={(e) => handleDateToChange(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        </div>
-                    </div>
                     </div>
                 </div>
 
@@ -400,7 +417,7 @@ export default function Reports(){
                             <div className="text-gray-500">
                                 {reportType === 'patients' && 'Cargando pacientes...'}
                                 {reportType === 'measurements' && 'Cargando mediciones...'}
-                                {reportType === 'summary' && 'Cargando resumen...'}
+                                
                             </div>
                         </div>
                     )}
@@ -413,11 +430,11 @@ export default function Reports(){
                     
                     {!loading && currentPatientsData.length === 0 && measurementsData.length === 0 && !summaryData && (
                         <div className="text-center py-8">
-                            <div className="text-gray-500">{reportType === 'measurements' ? 'No hay mediciones registradas' : reportType === 'summary' ? 'No hay datos de resumen' : 'No hay pacientes asignados'}</div>
+                            <div className="text-gray-500">{reportType === 'measurements' ? 'No hay mediciones registradas' : 'No hay pacientes asignados'}</div>
                         </div>
                     )}
                     
-                    {!loading && (currentPatientsData.length > 0 || measurementsData.length > 0 || (reportType === 'summary' && summaryData)) && (
+                    {!loading && (currentPatientsData.length > 0 || measurementsData.length > 0) && (
                     <div className="overflow-x-auto">
                     {reportType === 'patients' && (
                         <table className="w-full">
@@ -479,53 +496,9 @@ export default function Reports(){
                         </tbody>
                         </table>
                     )}
-                    {reportType === 'summary' && summaryData && (
-                        <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-gray-600 mb-1">Total de Pacientes</div>
-                            <div className="text-gray-900">{summaryData.totalPatients}</div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-gray-600 mb-1">Pacientes Riesgo Alto</div>
-                            <div className="text-gray-900">{summaryData.highRisk}</div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-gray-600 mb-1">Pacientes Inestables</div>
-                            <div className="text-gray-900">{summaryData.unstable}</div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-gray-600 mb-1">Pacientes Estables</div>
-                            <div className="text-gray-900">{summaryData.stable}</div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-gray-600 mb-1">TIR Promedio</div>
-                            <div className="text-gray-900">{summaryData.avgTIR}%</div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <div className="text-gray-600 mb-1">Pacientes Sin Registro</div>
-                            <div className="text-gray-900">{summaryData.noRecord}</div>
-                        </div>
-                        </div>
-                    )}
                     </div>
                     )}
                     <p className="text-gray-500 mt-4">{hasData() ? 'Mostrando primeros 5 registros de vista previa' : ''}</p>
-                </div>
-
-                {/* Download Button */}
-                <div className="flex justify-end">
-                    <button
-                    onClick={handleDownloadExcel}
-                    disabled={loading || !hasData()}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${
-                        loading || !hasData()
-                            ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                    }`}
-                    >
-                    <Download className="w-5 h-5" />
-                    Descargar Excel
-                    </button>
                 </div>
                 </div>
         </AppLayout>

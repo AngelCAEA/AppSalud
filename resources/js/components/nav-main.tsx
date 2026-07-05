@@ -28,12 +28,12 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 className={`h-10 text-sm transition-colors [&>a>svg]:size-[1.15rem] [&>a>svg]:shrink-0 ${
                                     isActive
                                         ? '!bg-blue-100 text-blue-600 border-l-[3px] border-blue-500 rounded-r-lg rounded-l-none'
-                                        : 'rounded-lg text-gray-400 hover:bg-gray-100'
+                                        : 'rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-gray-400'
                                 }`}
                             >
                                 <Link href={item.href} prefetch>
                                     {item.icon && <span className={`[&>svg]:size-[1.15rem] [&>svg]:shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-500'}`}><item.icon /></span>}
-                                    <span className={`${isActive ? 'text-blue-600 font-bold' : 'text-black'}`}>{item.title}</span>
+                                    <span className={`${isActive ? 'text-blue-600 font-bold' : 'text-black dark:text-white'}`}>{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
