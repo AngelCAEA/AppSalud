@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified', 'role:2'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'role:2'])->group(function () {
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    Route::get('/reports/patients-list', [ReportsController::class, 'getPatientsList'])->name('reports.patients-list');
     Route::get('/reports/patients', [ReportsController::class, 'getAssignedPatients'])->name('reports.patients');
     Route::get('/reports/measurements', [ReportsController::class, 'getMeasurements'])->name('reports.measurements');
     Route::get('/reports/summary', [ReportsController::class, 'getSummary'])->name('reports.summary');

@@ -4,12 +4,41 @@ import { useState, useEffect } from "react";
 import  { route }  from "ziggy-js";
 import * as XLSX from 'xlsx';
 import { Calendar, CheckSquare, Download, FileSpreadsheet, Users, Activity, TrendingUp, TrendingDown, AlertCircle, Clock } from "lucide-react";
+
+// ==========================================
+// TIPOS Y INTERFACES
+// ==========================================
 type ReportType = 'patients' | 'measurements';
 
+interface Patient {
+    id: number;
+    name: string;
+}
+
+// ==========================================
+// COMPONENTE PRINCIPAL
+// ==========================================
 export default function Reports(){
+    // ==========================================
+    // ESTADOS PRINCIPALES
+    // ==========================================
     const [reportType, setReportType] = useState<ReportType>('patients');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    
+    // ==========================================
+    // ESTADOS PARA SELECCIÓN DE PACIENTE
+    // ==========================================
+    /** Lista de todos los pacientes asignados al clínico actual */
+    const [patientsList, setPatientsList] = useState<Patient[]>([]);
+    /** ID del paciente actualmente seleccionado (null = todos los pacientes) */
+    const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+    /** Indica si se está cargando la lista de pacientes */
+    const [patientsListLoading, setPatientsListLoading] = useState(true);
+    
+    // ==========================================
+    // ESTADOS PARA DATOS Y COLUMNAS
+    // ==========================================
     const [selectedColumns, setSelectedColumns] = useState<string[]>([
         'name',
         'tir',
@@ -24,7 +53,52 @@ export default function Reports(){
     const [error, setError] = useState<string | null>(null);
     const [dateError, setDateError] = useState<string | null>(null);
 
-    // Validar que la fecha final no sea menor que la inicial
+    // ==========================================
+    // EFECTOS - CARGA DE LISTA DE PACIENTES
+    // ==========================================
+    /**
+     * Efecto que se ejecuta al montar el componente
+     * Obtiene la lista inicial de todos los pacientes asignados al clínico
+     */
+    useEffect(() => {
+        const fetchPatientsList = async () => {
+            try {
+                setPatientsListLoading(true);
+                const response = await fetch(route('reports.patients-list'));
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    setPatientsList(data.data);
+                    // Si hay pacientes, seleccionar el primero por defecto
+                    if (data.data.length > 0) {
+                        setSelectedPatientId(data.data[0].id);
+                    }
+                } else {
+                    console.error('Error cargando lista de pacientes');
+                }
+            } catch (err) {
+                console.error('Error fetching patients list:', err);
+            } finally {
+                setPatientsListLoading(false);
+            }
+        };
+
+        fetchPatientsList();
+    }, []);
+
+    // ==========================================
+    // FUNCIONES AUXILIARES - VALIDACIÓN DE FECHAS
+    // ==========================================
+    /**
+     * Valida que la fecha final no sea menor que la inicial
+     * @param from - Fecha inicial en formato YYYY-MM-DD
+     * @param to - Fecha final en formato YYYY-MM-DD
+     * @returns true si las fechas son válidas, false en caso contrario
+     */
     const validateDates = (from: string, to: string): boolean => {
         if (from && to && new Date(to) < new Date(from)) {
             setDateError('La fecha final no puede ser menor que la fecha inicial');
@@ -44,7 +118,25 @@ export default function Reports(){
         validateDates(dateFrom, value);
     };
 
-    // Obtener los pacientes asignados desde el backend
+    /**
+     * Maneja el cambio de paciente seleccionado
+     * Reestablece los datos para mostrar los del nuevo paciente
+     */
+    const handlePatientChange = (patientId: number | null) => {
+        setSelectedPatientId(patientId);
+        setError(null);
+    };
+
+    // ==========================================
+    // EFECTOS - CARGA DE PACIENTES (LISTA DETALLADA O INDIVIDUAL)
+    // ==========================================
+    /**
+     * Efecto que obtiene la lista de pacientes con sus datos detallados
+     * Se ejecuta cuando cambia: reportType, dateFrom, dateTo o selectedPatientId
+     * 
+     * Si selectedPatientId es null, trae todos los pacientes del clínico
+     * Si selectedPatientId tiene valor, trae solo ese paciente
+     */
     useEffect(() => {
         const fetchPatients = async () => {
             try {
@@ -55,7 +147,13 @@ export default function Reports(){
                     return;
                 }
                 
-                const response = await fetch(route('reports.patients'));
+                // Construir URL con parámetros de filtro
+                let url = route('reports.patients');
+                if (selectedPatientId) {
+                    url += `?patientId=${selectedPatientId}`;
+                }
+                
+                const response = await fetch(url);
                 
                 if (!response.ok) {
                     throw new Error(`Error: ${response.statusText}`);
@@ -86,7 +184,7 @@ export default function Reports(){
         if (reportType === 'patients') {
             fetchPatients();
         }
-    }, [reportType, dateFrom, dateTo]);
+    }, [reportType, dateFrom, dateTo, selectedPatientId]);
 
     // Obtener las mediciones desde el backend cuando el tipo sea measurements
     useEffect(() => {
@@ -99,7 +197,12 @@ export default function Reports(){
                     return;
                 }
                 
-                const url = `${route('reports.measurements')}?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+                // Construir URL con parámetros de filtro
+                let url = `${route('reports.measurements')}?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+                if (selectedPatientId) {
+                    url += `&patientId=${selectedPatientId}`;
+                }
+                
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -123,9 +226,10 @@ export default function Reports(){
         if (reportType === 'measurements') {
             fetchMeasurements();
         }
-    }, [reportType, dateFrom, dateTo]);
+    }, [reportType, dateFrom, dateTo, selectedPatientId]);
 
     // Obtener datos de resumen estadístico desde el backend (siempre)
+    // Las cards muestran datos globales de TODOS los pacientes, no responden al selector
     useEffect(() => {
         const fetchSummary = async () => {
             try {
@@ -134,7 +238,9 @@ export default function Reports(){
                     return;
                 }
                 
+                // Construir URL sin filtro de paciente (datos globales)
                 const url = `${route('reports.summary')}?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+                
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -266,6 +372,27 @@ export default function Reports(){
                         </div>
                         </div>
                     </div>
+                    
+                    {/* ==========================================
+                        SELECTOR DE PACIENTES
+                        ========================================== */}
+                    <div className="w-64">
+                        <label className="block text-gray-600 dark:text-white font-bold mb-2">Seleccionar Paciente</label>
+                        <select
+                            value={selectedPatientId || ''}
+                            onChange={(e) => handlePatientChange(e.target.value ? parseInt(e.target.value) : null)}
+                            disabled={patientsListLoading}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        >
+                            <option value="">Seleccionar paciente...</option>
+                            {patientsList.map((patient) => (
+                                <option key={patient.id} value={patient.id}>
+                                    {patient.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
                     <button
                     onClick={handleDownloadExcel}
                     disabled={loading || !hasData()}

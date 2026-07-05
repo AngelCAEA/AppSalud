@@ -17,17 +17,53 @@ class ReportsController extends Controller{
     }
 
     /**
+     * Obtener lista simple de pacientes asignados al clínico autenticado
+     * para el selector/dropdown en el frontend
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getPatientsList(Request $request)
+    {
+        $clinicianId = Auth::id();
+        
+        $patients = PatientClinician::where('clinician_id', $clinicianId)
+            ->with('patient')
+            ->get()
+            ->map(function ($patientClinician) {
+                $patient = $patientClinician->patient;
+                return [
+                    'id' => $patient->id,
+                    'name' => $patient->name,
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $patients->values(),
+        ]);
+    }
+
+    /**
      * Obtener los pacientes asignados al doctor/enfermero autenticado
      * con sus últimos registros de salud
+     * 
+     * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
      */
     public function getAssignedPatients(Request $request)
     {
         $clinicianId = Auth::id();
+        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
         
         // Obtener todos los pacientes asignados al clínico autenticado
-        $patients = PatientClinician::where('clinician_id', $clinicianId)
-            ->with('patient')
-            ->get()
+        $query = PatientClinician::where('clinician_id', $clinicianId)
+            ->with('patient');
+        
+        // Si se especifica un patientId, filtrar solo ese paciente
+        if ($selectedPatientId) {
+            $query->where('patient_id', $selectedPatientId);
+        }
+        
+        $patients = $query->get()
             ->map(function ($patientClinician) {
                 $patient = $patientClinician->patient;
                 
@@ -117,19 +153,36 @@ class ReportsController extends Controller{
 
     /**
      * Obtener resumen estadístico de los pacientes asignados al doctor/enfermero autenticado
+     * 
+     * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
+     * Si patientId está especificado, devuelve estadísticas de solo ese paciente
      */
     public function getSummary(Request $request)
     {
         $clinicianId = Auth::id();
+        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
         
         // Obtener fechas de filtro
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
         
         // Obtener todos los pacientes asignados al clínico
-        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
+        $query = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
             ->toArray();
+        
+        // Si se especifica un patientId, verificar que el paciente esté asignado y filtrar
+        if ($selectedPatientId) {
+            if (!in_array($selectedPatientId, $query)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente no asignado',
+                ], 403);
+            }
+            $query = [$selectedPatientId];
+        }
+        
+        $patientIds = $query;
         
         if (empty($patientIds)) {
             return response()->json([
@@ -147,6 +200,7 @@ class ReportsController extends Controller{
         
         // Obtener los pacientes con sus últimos registros
         $patients = PatientClinician::where('clinician_id', $clinicianId)
+            ->whereIn('patient_id', $patientIds)
             ->with('patient')
             ->get()
             ->map(function ($patientClinician) use ($dateFrom, $dateTo) {
@@ -219,19 +273,36 @@ class ReportsController extends Controller{
     /**
      * Obtener todos los registros de salud (mediciones) de los pacientes
      * asignados al doctor/enfermero autenticado, con filtrado por fechas
+     * 
+     * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
+     * Si patientId está especificado, devuelve solo mediciones de ese paciente
      */
     public function getMeasurements(Request $request)
     {
         $clinicianId = Auth::id();
+        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
         
         // Obtener fechas de filtro
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
         
         // Obtener IDs de pacientes asignados al clínico
-        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
+        $query = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
             ->toArray();
+        
+        // Si se especifica un patientId, verificar que esté asignado y filtrar
+        if ($selectedPatientId) {
+            if (!in_array($selectedPatientId, $query)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente no asignado',
+                ], 403);
+            }
+            $query = [$selectedPatientId];
+        }
+        
+        $patientIds = $query;
         
         if (empty($patientIds)) {
             return response()->json([
