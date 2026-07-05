@@ -3,12 +3,11 @@ import { Head, Link, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import  { route }  from "ziggy-js";
 import * as XLSX from 'xlsx';
-import { Calendar, CheckSquare, Download, FileSpreadsheet, Users, Activity, TrendingUp, TrendingDown, AlertCircle, Clock } from "lucide-react";
+import { Calendar, CheckSquare, FileSpreadsheet, Users, Activity, AlertCircle, Clock, ChevronDown } from "lucide-react";
 
 // ==========================================
 // TIPOS Y INTERFACES
 // ==========================================
-type ReportType = 'patients' | 'measurements';
 
 interface Patient {
     id: number;
@@ -22,7 +21,6 @@ export default function Reports(){
     // ==========================================
     // ESTADOS PRINCIPALES
     // ==========================================
-    const [reportType, setReportType] = useState<ReportType>('patients');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     
@@ -47,7 +45,6 @@ export default function Reports(){
         'lastReading'
     ]);
     const [patientsData, setPatientsData] = useState<any[]>([]);
-    const [measurementsData, setMeasurementsData] = useState<any[]>([]);
     const [summaryData, setSummaryData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -132,7 +129,7 @@ export default function Reports(){
     // ==========================================
     /**
      * Efecto que obtiene la lista de pacientes con sus datos detallados
-     * Se ejecuta cuando cambia: reportType, dateFrom, dateTo o selectedPatientId
+     * Se ejecuta cuando cambia: dateFrom, dateTo o selectedPatientId
      * 
      * Si selectedPatientId es null, trae todos los pacientes del clínico
      * Si selectedPatientId tiene valor, trae solo ese paciente
@@ -181,52 +178,8 @@ export default function Reports(){
             }
         };
 
-        if (reportType === 'patients') {
-            fetchPatients();
-        }
-    }, [reportType, dateFrom, dateTo, selectedPatientId]);
-
-    // Obtener las mediciones desde el backend cuando el tipo sea measurements
-    useEffect(() => {
-        const fetchMeasurements = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                
-                if (!validateDates(dateFrom, dateTo)) {
-                    return;
-                }
-                
-                // Construir URL con parámetros de filtro
-                let url = `${route('reports.measurements')}?dateFrom=${dateFrom}&dateTo=${dateTo}`;
-                if (selectedPatientId) {
-                    url += `&patientId=${selectedPatientId}`;
-                }
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`Error: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                if (data.success) {
-                    setMeasurementsData(data.data);
-                } else {
-                    setError('No se pudieron cargar las mediciones');
-                }
-            } catch (err) {
-                console.error('Error fetching measurements:', err);
-                setError(err instanceof Error ? err.message : 'Error desconocido');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (reportType === 'measurements') {
-            fetchMeasurements();
-        }
-    }, [reportType, dateFrom, dateTo, selectedPatientId]);
+        fetchPatients();
+    }, [dateFrom, dateTo, selectedPatientId]);
 
     // Obtener datos de resumen estadístico desde el backend (siempre)
     // Las cards muestran datos globales de TODOS los pacientes, no responden al selector
@@ -264,20 +217,18 @@ export default function Reports(){
 
     const currentPatientsData = patientsData.length > 0 ? patientsData : [];
     
-    // Determinar si hay datos para descargar basado en el tipo de reporte
+    // Determinar si hay datos para descargar
     const hasData = () => {
         if (dateError) return false;
-        if (reportType === 'patients') return currentPatientsData.length > 0;
-        return measurementsData.length > 0;
+        return currentPatientsData.length > 0;
     };
     const handleDownloadExcel = () => {
     let data: any[] = [];
     let fileName = '';
     let sheetName = '';
 
-    if (reportType === 'patients') {
-      // Prepare patients data
-      data = currentPatientsData.map(patient => {
+    // Prepare patients data
+    data = currentPatientsData.map(patient => {
         const row: any = {};
         if (selectedColumns.includes('name')) row['Nombre del Paciente'] = patient.name;
         if (selectedColumns.includes('tir')) row['TIR (%)'] = patient.tir;
@@ -287,23 +238,9 @@ export default function Reports(){
         if (selectedColumns.includes('lastReading')) row['Fecha Última Lectura'] = patient.lastReading;
         if (selectedColumns.includes('daysWithoutRecord')) row['Días Sin Registro'] = patient.daysWithoutRecord;
         return row;
-      });
-      fileName = `Reporte_Pacientes_${new Date().toISOString().split('T')[0]}.xlsx`;
-      sheetName = 'Pacientes';
-    } else if (reportType === 'measurements') {
-      // Prepare measurements data
-      data = measurementsData.map(measurement => ({
-        'Paciente': measurement.patientName,
-        'Fecha': measurement.date,
-        'Hora': measurement.time,
-        'Tipo de Medición': measurement.type,
-        'Valor': measurement.value,
-        'Unidad': measurement.unit,
-        'Estado': measurement.status
-      }));
-      fileName = `Reporte_Mediciones_${new Date().toISOString().split('T')[0]}.xlsx`;
-      sheetName = 'Mediciones';
-    }
+    });
+    fileName = `Reporte_Pacientes_${new Date().toISOString().split('T')[0]}.xlsx`;
+    sheetName = 'Pacientes';
 
         // Create workbook and worksheet
         const worksheet = XLSX.utils.json_to_sheet(data);
@@ -337,7 +274,7 @@ export default function Reports(){
             <Head title="Reportes" />
              <div className="pl-8 pr-8">
                 {/* Filters and Download Button */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-700 p-6 mb-6 flex items-end gap-4">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-700 p-6 mb-6 flex flex-col lg:flex-row lg:items-end gap-4">
                     <div className="flex-1">
                         <h2 className="text-gray-600 dark:text-white mb-4">Periodo de análisis</h2>
                         {dateError && (
@@ -345,7 +282,7 @@ export default function Reports(){
                                 <div className="text-red-800 text-sm">{dateError}</div>
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-gray-600 dark:text-white font-bold mb-2">Fecha inicial</label>
                             <div className="relative">
@@ -376,27 +313,31 @@ export default function Reports(){
                     {/* ==========================================
                         SELECTOR DE PACIENTES
                         ========================================== */}
-                    <div className="w-64">
-                        <label className="block text-gray-600 dark:text-white font-bold mb-2">Seleccionar Paciente</label>
-                        <select
-                            value={selectedPatientId || ''}
-                            onChange={(e) => handlePatientChange(e.target.value ? parseInt(e.target.value) : null)}
-                            disabled={patientsListLoading}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        >
-                            <option value="">Seleccionar paciente...</option>
-                            {patientsList.map((patient) => (
-                                <option key={patient.id} value={patient.id}>
-                                    {patient.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="w-full lg:w-64 flex flex-col justify-end">
+                        <label className="block text-gray-600 dark:text-white font-bold mb-2">Seleccionar paciente</label>
+                        <div className="relative">
+                            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500 pointer-events-none" />
+                            <select
+                                value={selectedPatientId || ''}
+                                onChange={(e) => handlePatientChange(e.target.value ? parseInt(e.target.value) : null)}
+                                disabled={patientsListLoading}
+                                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none cursor-pointer"
+                            >
+                                <option value="">Seleccionar paciente...</option>
+                                {patientsList.map((patient) => (
+                                    <option key={patient.id} value={patient.id}>
+                                        {patient.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        </div>
                     </div>
                     
                     <button
                     onClick={handleDownloadExcel}
                     disabled={loading || !hasData()}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors w-full lg:w-auto lg:whitespace-nowrap ${
                         loading || !hasData()
                             ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
                             : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
@@ -456,49 +397,8 @@ export default function Reports(){
                     </div>
                 )}
 
-                {/* Report Type Selection */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                    <h2 className="text-gray-900 dark:text-gray-100 mb-4">Tipo de Reporte</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                    <button
-                        onClick={() => setReportType('patients')}
-                        className={`p-6 rounded-lg border-2 transition-all ${
-                        reportType === 'patients'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                    >
-                        <Users className={`w-8 h-8 mb-3 mx-auto ${reportType === 'patients' ? 'text-blue-600' : 'text-gray-400'}`} />
-                        <div className={reportType === 'patients' ? 'text-blue-600' : 'text-gray-700'}>
-                        Lista de Pacientes
-                        </div>
-                        <p className="text-gray-500 mt-1">
-                        Información general de todos los pacientes
-                        </p>
-                    </button>
-
-                    <button
-                        onClick={() => setReportType('measurements')}
-                        className={`p-6 rounded-lg border-2 transition-all ${
-                        reportType === 'measurements'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                    >
-                        <Activity className={`w-8 h-8 mb-3 mx-auto ${reportType === 'measurements' ? 'text-blue-600' : 'text-gray-400'}`} />
-                        <div className={reportType === 'measurements' ? 'text-blue-600' : 'text-gray-700'}>
-                        Mediciones Detalladas
-                        </div>
-                        <p className="text-gray-500 mt-1">
-                        Historial completo de mediciones
-                        </p>
-                    </button>
-                    </div>
-                </div>
-
                 {/* Column Selection (only for patients report) */}
-                {reportType === 'patients' && (
-                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
                     <h2 className="text-gray-900 dark:text-gray-100 mb-4">Columnas a Incluir</h2>
                     <div className="grid grid-cols-2 gap-3">
                         {availableColumns.map(column => (
@@ -526,8 +426,7 @@ export default function Reports(){
                         </button>
                         ))}
                     </div>
-                    </div>
-                )}
+                </div>
 
                 {/* Preview Section */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
@@ -541,11 +440,7 @@ export default function Reports(){
                     
                     {loading && (
                         <div className="text-center py-8">
-                            <div className="text-gray-500">
-                                {reportType === 'patients' && 'Cargando pacientes...'}
-                                {reportType === 'measurements' && 'Cargando mediciones...'}
-                                
-                            </div>
+                            <div className="text-gray-500">Cargando pacientes...</div>
                         </div>
                     )}
                     
@@ -555,15 +450,14 @@ export default function Reports(){
                         </div>
                     )}
                     
-                    {!loading && currentPatientsData.length === 0 && measurementsData.length === 0 && !summaryData && (
+                    {!loading && currentPatientsData.length === 0 && !summaryData && (
                         <div className="text-center py-8">
-                            <div className="text-gray-500">{reportType === 'measurements' ? 'No hay mediciones registradas' : 'No hay pacientes asignados'}</div>
+                            <div className="text-gray-500">No hay pacientes asignados</div>
                         </div>
                     )}
                     
-                    {!loading && (currentPatientsData.length > 0 || measurementsData.length > 0) && (
+                    {!loading && currentPatientsData.length > 0 && (
                     <div className="overflow-x-auto">
-                    {reportType === 'patients' && (
                         <table className="w-full">
                         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                             <tr>
@@ -590,39 +484,6 @@ export default function Reports(){
                             ))}
                         </tbody>
                         </table>
-                    )}
-                    {reportType === 'measurements' && (
-                        <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                            <tr>
-                            <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Paciente</th>
-                            <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Fecha</th>
-                            <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Tipo</th>
-                            <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Valor</th>
-                            <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {measurementsData.slice(0, 5).map((measurement, index) => (
-                            <tr key={index}>
-                                <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{measurement.patientName}</td>
-                                <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{measurement.date} {measurement.time}</td>
-                                <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{measurement.type}</td>
-                                <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{measurement.value} {measurement.unit}</td>
-                                <td className="px-4 py-3">
-                                <span className={`px-2 py-1 rounded ${
-                                    measurement.status === 'Crítico' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' :
-                                    measurement.status === 'Elevado' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
-                                    'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                                }`}>
-                                    {measurement.status}
-                                </span>
-                                </td>
-                            </tr>
-                            ))}
-                        </tbody>
-                        </table>
-                    )}
                     </div>
                     )}
                     <p className="text-gray-500 mt-4">{hasData() ? 'Mostrando primeros 5 registros de vista previa' : ''}</p>
