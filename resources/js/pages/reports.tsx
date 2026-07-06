@@ -3,7 +3,7 @@ import { Head, Link, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import  { route }  from "ziggy-js";
 import * as XLSX from 'xlsx';
-import { Calendar, CheckSquare, FileSpreadsheet, Users, Activity, AlertCircle, Clock, ChevronDown } from "lucide-react";
+import { Calendar, CheckSquare, FileSpreadsheet, Users, Activity, AlertCircle, Clock, ChevronDown, Lock } from "lucide-react";
 
 // ==========================================
 // TIPOS Y INTERFACES
@@ -46,7 +46,7 @@ export default function Reports(){
     ]);
     const [patientsData, setPatientsData] = useState<any[]>([]);
     const [summaryData, setSummaryData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [dateError, setDateError] = useState<string | null>(null);
 
@@ -70,10 +70,6 @@ export default function Reports(){
                 const data = await response.json();
                 if (data.success) {
                     setPatientsList(data.data);
-                    // Si hay pacientes, seleccionar el primero por defecto
-                    if (data.data.length > 0) {
-                        setSelectedPatientId(data.data[0].id);
-                    }
                 } else {
                     console.error('Error cargando lista de pacientes');
                 }
@@ -140,6 +136,13 @@ export default function Reports(){
                 setLoading(true);
                 setError(null);
                 
+                // Validar que ambas fechas estén seleccionadas
+                if (!dateFrom || !dateTo) {
+                    setPatientsData([]);
+                    setLoading(false);
+                    return;
+                }
+                
                 if (!validateDates(dateFrom, dateTo)) {
                     return;
                 }
@@ -161,10 +164,10 @@ export default function Reports(){
                     // Filtrar pacientes por rango de fechas
                     const filteredPatients = data.data.filter((patient: any) => {
                         if (!patient.lastReading) return true; // Incluir pacientes sin registro
-                        const readingDate = new Date(patient.lastReading);
-                        const fromDate = new Date(dateFrom);
-                        const toDate = new Date(dateTo);
-                        return readingDate >= fromDate && readingDate <= toDate;
+                        // Extraer solo la fecha (sin hora) de lastReading
+                        const readingDateStr = patient.lastReading.split(' ')[0]; // "2026-07-05 10:30" -> "2026-07-05"
+                        // Comparar fechas como strings (YYYY-MM-DD)
+                        return readingDateStr >= dateFrom && readingDateStr <= dateTo;
                     });
                     setPatientsData(filteredPatients);
                 } else {
@@ -251,14 +254,6 @@ export default function Reports(){
         XLSX.writeFile(workbook, fileName);
     };
 
-    const toggleColumn = (column: string) => {
-        if (selectedColumns.includes(column)) {
-        setSelectedColumns(selectedColumns.filter(col => col !== column));
-        } else {
-        setSelectedColumns([...selectedColumns, column]);
-        }
-    };
-
     const availableColumns = [
         { id: 'name', label: 'Nombre del Paciente' },
         { id: 'tir', label: 'TIR (%)' },
@@ -314,7 +309,7 @@ export default function Reports(){
                         SELECTOR DE PACIENTES
                         ========================================== */}
                     <div className="w-full lg:w-64 flex flex-col justify-end">
-                        <label className="block text-gray-600 dark:text-white font-bold mb-2">Seleccionar paciente</label>
+                        <label className="block text-gray-600 dark:text-white font-bold mb-2">Paciente</label>
                         <div className="relative">
                             <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500 pointer-events-none" />
                             <select
@@ -323,7 +318,7 @@ export default function Reports(){
                                 disabled={patientsListLoading}
                                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none cursor-pointer"
                             >
-                                <option value="">Seleccionar paciente...</option>
+                                <option value="">Seleccionar paciente</option>
                                 {patientsList.map((patient) => (
                                     <option key={patient.id} value={patient.id}>
                                         {patient.name}
@@ -399,31 +394,20 @@ export default function Reports(){
 
                 {/* Column Selection (only for patients report) */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                    <h2 className="text-gray-900 dark:text-gray-100 mb-4">Columnas a Incluir</h2>
-                    <div className="grid grid-cols-2 gap-3">
-                        {availableColumns.map(column => (
-                        <button
-                            key={column.id}
-                            onClick={() => toggleColumn(column.id)}
-                            className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
-                            selectedColumns.includes(column.id)
-                                ? 'border-blue-600 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                        >
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                            selectedColumns.includes(column.id)
-                                ? 'border-blue-600 bg-blue-600'
-                                : 'border-gray-300'
-                            }`}>
-                            {selectedColumns.includes(column.id) && (
-                                <CheckSquare className="w-4 h-4 text-white" />
-                            )}
+                    <h2 className="text-gray-900 dark:text-gray-100 mb-4">C|olumnas visibles</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {availableColumns
+                            .filter(column => selectedColumns.includes(column.id))
+                            .map(column => (
+                            <div
+                                key={column.id}
+                                className="flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-gray-400 bg-gray-100 dark:bg-gray-800 dark:border-gray-600 cursor-not-allowed"
+                            >
+                                <Lock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                                    {column.label}
+                                </span>
                             </div>
-                            <span className={selectedColumns.includes(column.id) ? 'text-blue-600' : 'text-gray-700'}>
-                            {column.label}
-                            </span>
-                        </button>
                         ))}
                     </div>
                 </div>
