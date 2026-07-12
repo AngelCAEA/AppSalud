@@ -93,7 +93,12 @@ class ReportsController extends Controller{
             $query->whereBetween('recorded_at', [$fromDate, $toDate]);
         }
 
-        $records = $query->get()->map(function ($record) {
+        // Pre-calcular TIR por paciente para evitar múltiples queries dentro del map
+        $tirByPatient = collect($patientIds)->mapWithKeys(
+            fn($id) => [$id => $this->calculateTIR($id)]
+        )->toArray();
+
+        $records = $query->get()->map(function ($record) use ($tirByPatient) {
             $recordedAt = Carbon::parse($record->recorded_at)->setTimezone('America/Mexico_City');
 
             return [
@@ -102,6 +107,8 @@ class ReportsController extends Controller{
                 'name'      => $record->patient->name,
                 'type'      => $record->type,
                 'date'      => $recordedAt->format('Y-m-d H:i'),
+                // TIR: calculado sobre los últimos 30 registros de glucosa del paciente
+                'tir'       => $tirByPatient[$record->patient_id] ?? 0,
                 // Glucosa: solo presente en registros de tipo 'glucose'
                 'glucose'   => $record->glucose_value,
                 // Presión arterial: solo presente en registros de tipo 'blood_pressure'
@@ -111,7 +118,6 @@ class ReportsController extends Controller{
                 'status'    => $this->getMeasurementStatus($record),
             ];
         });
-
         return response()->json(['success' => true, 'data' => $records->values()]);
     }
 

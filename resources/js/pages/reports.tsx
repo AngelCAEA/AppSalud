@@ -39,6 +39,7 @@ export default function Reports(){
     // ==========================================
     const [selectedColumns, setSelectedColumns] = useState<string[]>([
         'name',
+        'tir',
         'date',
         'glucose',
         'pressure',
@@ -138,7 +139,7 @@ export default function Reports(){
                 
                 // Requiere ambas fechas O un paciente específico
                 const hasDates = !!(dateFrom && dateTo);
-                if (!hasDates && !selectedPatientId) {
+                if (!hasDates || !selectedPatientId) {
                     setPatientsData([]);
                     setLoading(false);
                     return;
@@ -229,6 +230,7 @@ export default function Reports(){
     data = currentPatientsData.map(record => {
         const row: any = {};
         if (selectedColumns.includes('name'))     row['Paciente']          = record.name;
+        if (selectedColumns.includes('tir'))      row['TIR (%)']           = record.tir;
         if (selectedColumns.includes('date'))     row['Fecha de Registro'] = record.date;
         if (selectedColumns.includes('glucose'))  row['Glucosa (mg/dL)']   = record.glucose ?? 'N/A';
         if (selectedColumns.includes('pressure')) row['Presión Arterial']  = record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : 'N/A';
@@ -249,6 +251,7 @@ export default function Reports(){
 
     const availableColumns = [
         { id: 'name',     label: 'Paciente' },
+        { id: 'tir',      label: 'TIR (%)' },
         { id: 'date',     label: 'Fecha de Registro' },
         { id: 'glucose',  label: 'Glucosa (mg/dL)' },
         { id: 'pressure', label: 'Presión Arterial' },
@@ -322,7 +325,7 @@ export default function Reports(){
                     
                     <button
                     onClick={handleDownloadExcel}
-                    disabled={loading || !hasData()}
+                    disabled={loading || (!hasData() && !selectedPatientId)}
                     className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors w-full lg:w-auto lg:whitespace-nowrap ${
                         loading || !hasData()
                             ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
@@ -405,7 +408,7 @@ export default function Reports(){
 
                 {/* Preview Section */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                    <h2 className="text-gray-900 dark:text-gray-100 mb-4">Vista Previa de Datos</h2>
+                    <h2 className="text-gray-900 dark:text-gray-100 mb-4">Vista previa de datos</h2>
                     
                     {dateError && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
@@ -430,6 +433,20 @@ export default function Reports(){
                             <div className="text-gray-500">No hay pacientes asignados</div>
                         </div>
                     )}
+
+                    {/* Disclaimer: sin filtros activos */}
+                    {!loading && currentPatientsData.length === 0 && !dateFrom && !dateTo && !selectedPatientId && (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                            <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900 rounded-2xl flex items-center justify-center">
+                                <Calendar className="w-7 h-7 text-blue-400" />
+                            </div>
+                            <p className="text-gray-700 dark:text-gray-200 font-semibold text-base">No hay datos para mostrar</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-sm text-center max-w-sm">
+                                Selecciona un <span className="font-medium text-blue-500">rango de fechas</span> (fecha inicial y final)
+                                o elige un <span className="font-medium text-blue-500">paciente</span> del selector para visualizar el historial de registros.
+                            </p>
+                        </div>
+                    )}
                     
                     {!loading && currentPatientsData.length > 0 && (
                     <div className="overflow-x-auto">
@@ -437,6 +454,7 @@ export default function Reports(){
                         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                             <tr>
                             {selectedColumns.includes('name')     && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Paciente</th>}
+                            {selectedColumns.includes('tir')      && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">TIR (30 días)</th>}
                             {selectedColumns.includes('date')     && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Fecha de Registro</th>}
                             {selectedColumns.includes('glucose')  && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Glucosa</th>}
                             {selectedColumns.includes('pressure') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Presión Arterial</th>}
@@ -446,16 +464,32 @@ export default function Reports(){
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                             {currentPatientsData.map((record) => (
                             <tr key={record.id}>
-                                {selectedColumns.includes('name')     && <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{record.name}</td>}
+                                {selectedColumns.includes('name')     && <td className="px-4 py-3 font-bold text-gray-900 dark:text-gray-100">{record.name}</td>}
+                                {selectedColumns.includes('tir') && (
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-gray-900 dark:text-gray-100 text-sm w-9 flex-shrink-0 font-bold">{record.tir}%</span>
+                                            <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden min-w-[60px]">
+                                                <div
+                                                    className={`h-full rounded-full ${
+                                                        record.tir >= 70 ? 'bg-green-500' :
+                                                        record.tir >= 50 ? 'bg-orange-400' : 'bg-red-500'
+                                                    }`}
+                                                    style={{ width: `${record.tir}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </td>
+                                )}
                                 {selectedColumns.includes('date')     && <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{record.date}</td>}
                                 {selectedColumns.includes('glucose')  && (
                                     <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-                                        {record.glucose ? `${record.glucose} mg/dL` : <span className="text-gray-400 text-sm">N/A</span>}
+                                        {record.glucose ? `${record.glucose} mg/dL` : <span> - </span>}
                                     </td>
                                 )}
                                 {selectedColumns.includes('pressure') && (
                                     <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-                                        {record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : <span className="text-gray-400 text-sm">N/A</span>}
+                                        {record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : <span> - </span>}
                                     </td>
                                 )}
                                 {selectedColumns.includes('status') && (
