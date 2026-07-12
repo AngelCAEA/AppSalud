@@ -39,10 +39,10 @@ export default function Reports(){
     // ==========================================
     const [selectedColumns, setSelectedColumns] = useState<string[]>([
         'name',
-        'tir',
-        'riskLevel',
-        'lastGlucose',
-        'lastReading'
+        'date',
+        'glucose',
+        'pressure',
+        'status'
     ]);
     const [patientsData, setPatientsData] = useState<any[]>([]);
     const [summaryData, setSummaryData] = useState<any>(null);
@@ -136,22 +136,25 @@ export default function Reports(){
                 setLoading(true);
                 setError(null);
                 
-                // Validar que ambas fechas estén seleccionadas
-                if (!dateFrom || !dateTo) {
+                // Requiere ambas fechas O un paciente específico
+                const hasDates = !!(dateFrom && dateTo);
+                if (!hasDates && !selectedPatientId) {
                     setPatientsData([]);
                     setLoading(false);
                     return;
                 }
-                
-                if (!validateDates(dateFrom, dateTo)) {
+
+                // Validar fechas solo si ambas están definidas
+                if (hasDates && !validateDates(dateFrom, dateTo)) {
                     return;
                 }
                 
                 // Construir URL con parámetros de filtro
-                let url = route('reports.patients');
-                if (selectedPatientId) {
-                    url += `?patientId=${selectedPatientId}`;
-                }
+                const params = new URLSearchParams();
+                if (selectedPatientId) params.set('patientId', String(selectedPatientId));
+                if (dateFrom) params.set('dateFrom', dateFrom);
+                if (dateTo) params.set('dateTo', dateTo);
+                const url = `${route('reports.patients')}${params.size > 0 ? '?' + params.toString() : ''}`;
                 
                 const response = await fetch(url);
                 
@@ -161,15 +164,7 @@ export default function Reports(){
                 
                 const data = await response.json();
                 if (data.success) {
-                    // Filtrar pacientes por rango de fechas
-                    const filteredPatients = data.data.filter((patient: any) => {
-                        if (!patient.lastReading) return true; // Incluir pacientes sin registro
-                        // Extraer solo la fecha (sin hora) de lastReading
-                        const readingDateStr = patient.lastReading.split(' ')[0]; // "2026-07-05 10:30" -> "2026-07-05"
-                        // Comparar fechas como strings (YYYY-MM-DD)
-                        return readingDateStr >= dateFrom && readingDateStr <= dateTo;
-                    });
-                    setPatientsData(filteredPatients);
+                    setPatientsData(data.data);
                 } else {
                     setError('No se pudieron cargar los datos');
                 }
@@ -231,19 +226,17 @@ export default function Reports(){
     let sheetName = '';
 
     // Prepare patients data
-    data = currentPatientsData.map(patient => {
+    data = currentPatientsData.map(record => {
         const row: any = {};
-        if (selectedColumns.includes('name')) row['Nombre del Paciente'] = patient.name;
-        if (selectedColumns.includes('tir')) row['TIR (%)'] = patient.tir;
-        if (selectedColumns.includes('riskLevel')) row['Nivel de Riesgo'] = patient.riskLevel;
-        if (selectedColumns.includes('lastGlucose')) row['Última Glucosa (mg/dL)'] = patient.lastGlucose || 'Sin dato';
-        if (selectedColumns.includes('lastPressure')) row['Última PA (mmHg)'] = patient.lastSystolic && patient.lastDiastolic ? `${patient.lastSystolic}/${patient.lastDiastolic}` : 'Sin dato';
-        if (selectedColumns.includes('lastReading')) row['Fecha Última Lectura'] = patient.lastReading;
-        if (selectedColumns.includes('daysWithoutRecord')) row['Días Sin Registro'] = patient.daysWithoutRecord;
+        if (selectedColumns.includes('name'))     row['Paciente']          = record.name;
+        if (selectedColumns.includes('date'))     row['Fecha de Registro'] = record.date;
+        if (selectedColumns.includes('glucose'))  row['Glucosa (mg/dL)']   = record.glucose ?? 'N/A';
+        if (selectedColumns.includes('pressure')) row['Presión Arterial']  = record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : 'N/A';
+        if (selectedColumns.includes('status'))   row['Estado']            = record.status;
         return row;
     });
-    fileName = `Reporte_Pacientes_${new Date().toISOString().split('T')[0]}.xlsx`;
-    sheetName = 'Pacientes';
+    fileName = `Historial_Registros_${new Date().toISOString().split('T')[0]}.xlsx`;
+    sheetName = 'Historial';
 
         // Create workbook and worksheet
         const worksheet = XLSX.utils.json_to_sheet(data);
@@ -255,13 +248,11 @@ export default function Reports(){
     };
 
     const availableColumns = [
-        { id: 'name', label: 'Nombre del Paciente' },
-        { id: 'tir', label: 'TIR (%)' },
-        { id: 'riskLevel', label: 'Nivel de Riesgo' },
-        { id: 'lastGlucose', label: 'Última Glucosa' },
-        { id: 'lastPressure', label: 'Última Presión Arterial' },
-        { id: 'lastReading', label: 'Fecha Última Lectura' },
-        { id: 'daysWithoutRecord', label: 'Días Sin Registro' }
+        { id: 'name',     label: 'Paciente' },
+        { id: 'date',     label: 'Fecha de Registro' },
+        { id: 'glucose',  label: 'Glucosa (mg/dL)' },
+        { id: 'pressure', label: 'Presión Arterial' },
+        { id: 'status',   label: 'Estado' },
     ];
 
     return (
@@ -445,32 +436,46 @@ export default function Reports(){
                         <table className="w-full">
                         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                             <tr>
-                            {selectedColumns.includes('name') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Paciente</th>}
-                            {selectedColumns.includes('tir') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">TIR (%)</th>}
-                            {selectedColumns.includes('riskLevel') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Riesgo</th>}
-                            {selectedColumns.includes('lastGlucose') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Glucosa</th>}
-                            {selectedColumns.includes('lastPressure') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Presión Arterial</th>}
-                            {selectedColumns.includes('lastReading') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Última Lectura</th>}
-                            {selectedColumns.includes('daysWithoutRecord') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Días Sin Registro</th>}
+                            {selectedColumns.includes('name')     && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Paciente</th>}
+                            {selectedColumns.includes('date')     && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Fecha de Registro</th>}
+                            {selectedColumns.includes('glucose')  && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Glucosa</th>}
+                            {selectedColumns.includes('pressure') && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Presión Arterial</th>}
+                            {selectedColumns.includes('status')   && <th className="px-4 py-3 text-left text-gray-600 dark:text-gray-300">Estado</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {currentPatientsData.slice(0, 5).map((patient) => (
-                            <tr key={patient.id}>
-                                {selectedColumns.includes('name') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.name}</td>}
-                                {selectedColumns.includes('tir') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.tir}%</td>}
-                                {selectedColumns.includes('riskLevel') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.riskLevel}</td>}
-                                {selectedColumns.includes('lastGlucose') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.lastGlucose || 'Sin dato'}</td>}
-                                {selectedColumns.includes('lastPressure') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.lastSystolic && patient.lastDiastolic ? `${patient.lastSystolic}/${patient.lastDiastolic}` : 'Sin dato'}</td>}
-                                {selectedColumns.includes('lastReading') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.lastReading}</td>}
-                                {selectedColumns.includes('daysWithoutRecord') && <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{patient.daysWithoutRecord}</td>}
+                            {currentPatientsData.map((record) => (
+                            <tr key={record.id}>
+                                {selectedColumns.includes('name')     && <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{record.name}</td>}
+                                {selectedColumns.includes('date')     && <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{record.date}</td>}
+                                {selectedColumns.includes('glucose')  && (
+                                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
+                                        {record.glucose ? `${record.glucose} mg/dL` : <span className="text-gray-400 text-sm">N/A</span>}
+                                    </td>
+                                )}
+                                {selectedColumns.includes('pressure') && (
+                                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
+                                        {record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : <span className="text-gray-400 text-sm">N/A</span>}
+                                    </td>
+                                )}
+                                {selectedColumns.includes('status') && (
+                                    <td className="px-4 py-3">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            record.status === 'Crítico'  ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' :
+                                            record.status === 'Elevado'  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' :
+                                            'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                        }`}>
+                                            {record.status}
+                                        </span>
+                                    </td>
+                                )}
                             </tr>
                             ))}
                         </tbody>
                         </table>
                     </div>
                     )}
-                    <p className="text-gray-500 mt-4">{hasData() ? 'Mostrando primeros 5 registros de vista previa' : ''}</p>
+                    <p className="text-gray-500 mt-4">{hasData() ? `${currentPatientsData.length} registro(s) encontrado(s)` : ''}</p>
                 </div>
                 </div>
         </AppLayout>
