@@ -2,7 +2,7 @@ import AppLayout from "@/layouts/app-layout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import  { route }  from "ziggy-js";
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { Calendar, CheckSquare, FileSpreadsheet, Users, Activity, AlertCircle, Clock, ChevronDown, Lock } from "lucide-react";
 
 // ==========================================
@@ -222,31 +222,59 @@ export default function Reports(){
         return currentPatientsData.length > 0;
     };
     const handleDownloadExcel = () => {
-    let data: any[] = [];
-    let fileName = '';
-    let sheetName = '';
+        // Construir filas de datos
+        const data = currentPatientsData.map(record => {
+            const row: any = {};
+            if (selectedColumns.includes('name'))     row['Paciente']          = record.name;
+            if (selectedColumns.includes('tir'))      row['TIR (%)']           = record.tir;
+            if (selectedColumns.includes('date'))     row['Fecha de Registro'] = record.date;
+            if (selectedColumns.includes('glucose'))  row['Glucosa (mg/dL)']   = record.glucose ?? 'N/A';
+            if (selectedColumns.includes('pressure')) row['Presión Arterial']  = record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : 'N/A';
+            if (selectedColumns.includes('status'))   row['Estado']            = record.status;
+            return row;
+        });
 
-    // Prepare patients data
-    data = currentPatientsData.map(record => {
-        const row: any = {};
-        if (selectedColumns.includes('name'))     row['Paciente']          = record.name;
-        if (selectedColumns.includes('tir'))      row['TIR (%)']           = record.tir;
-        if (selectedColumns.includes('date'))     row['Fecha de Registro'] = record.date;
-        if (selectedColumns.includes('glucose'))  row['Glucosa (mg/dL)']   = record.glucose ?? 'N/A';
-        if (selectedColumns.includes('pressure')) row['Presión Arterial']  = record.systolic && record.diastolic ? `${record.systolic}/${record.diastolic} mmHg` : 'N/A';
-        if (selectedColumns.includes('status'))   row['Estado']            = record.status;
-        return row;
-    });
-    fileName = `Historial_Registros_${new Date().toISOString().split('T')[0]}.xlsx`;
-    sheetName = 'Historial';
+        const ws = XLSX.utils.json_to_sheet(data);
 
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Anchos de columna en caracteres
+        const colWidths: { wch: number }[] = [];
+        if (selectedColumns.includes('name'))     colWidths.push({ wch: 24 });
+        if (selectedColumns.includes('tir'))      colWidths.push({ wch: 12 });
+        if (selectedColumns.includes('date'))     colWidths.push({ wch: 20 });
+        if (selectedColumns.includes('glucose'))  colWidths.push({ wch: 18 });
+        if (selectedColumns.includes('pressure')) colWidths.push({ wch: 22 });
+        if (selectedColumns.includes('status'))   colWidths.push({ wch: 14 });
+        ws['!cols'] = colWidths;
+
+        // Color de celdas en la columna Estado
+        // Crítico → rojo, Elevado → amarillo, Normal → verde (colores estándar de Excel)
+        if (selectedColumns.includes('status')) {
+            const orderedCols = ['name', 'tir', 'date', 'glucose', 'pressure', 'status'];
+            const activeCols  = orderedCols.filter(c => selectedColumns.includes(c));
+            const statusIdx   = activeCols.indexOf('status');
+            const colLetter   = String.fromCharCode(65 + statusIdx); // A, B, C…
+
+            currentPatientsData.forEach((record, i) => {
+                const cell = `${colLetter}${i + 2}`; // fila 1 = encabezado
+                if (!ws[cell]) return;
+                const isCritico = record.status === 'Crítico';
+                const isElevado = record.status === 'Elevado';
+                ws[cell].s = {
+                    fill: {
+                        patternType: 'solid',
+                        fgColor: { rgb: isCritico ? 'FFC7CE' : isElevado ? 'FFEB9C' : 'C6EFCE' },
+                    },
+                    font: {
+                        bold: true,
+                        color: { rgb: isCritico ? '9C0006' : isElevado ? '9C5700' : '276221' },
+                    },
+                };
+            });
+        }
+
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-        // Generate and download file
-        XLSX.writeFile(workbook, fileName);
+        XLSX.utils.book_append_sheet(workbook, ws, 'Historial');
+        XLSX.writeFile(workbook, `Historial_Registros_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const availableColumns = [
