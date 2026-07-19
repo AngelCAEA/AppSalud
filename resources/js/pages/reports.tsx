@@ -462,6 +462,19 @@ export default function Reports(){
                         </div>
                     )}
 
+                    {/* Sin resultados con filtros activos */}
+                    {!loading && !error && currentPatientsData.length === 0 && (dateFrom || dateTo || selectedPatientId) && (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                            <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
+                                <Activity className="w-7 h-7 text-gray-400" />
+                            </div>
+                            <p className="text-gray-700 dark:text-gray-200 font-semibold text-base">No se encontraron registros</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-sm text-center max-w-sm">
+                                No hay registros de salud para los filtros seleccionados. Intenta con un rango de fechas diferente o selecciona otro paciente.
+                            </p>
+                        </div>
+                    )}
+
                     {/* Disclaimer: sin filtros activos */}
                     {!loading && currentPatientsData.length === 0 && !dateFrom && !dateTo && !selectedPatientId && (
                         <div className="flex flex-col items-center justify-center py-12 gap-3">
