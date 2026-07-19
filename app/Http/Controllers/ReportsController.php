@@ -17,49 +17,23 @@ class ReportsController extends Controller{
     }
 
     /**
-     * Obtener los pacientes asignados al doctor/enfermero autenticado
-     * con sus últimos registros de salud
+     * Obtener lista simple de pacientes asignados al clínico autenticado
+     * para el selector/dropdown en el frontend
+     * 
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function getAssignedPatients(Request $request)
+    public function getPatientsList(Request $request)
     {
         $clinicianId = Auth::id();
         
-        // Obtener todos los pacientes asignados al clínico autenticado
         $patients = PatientClinician::where('clinician_id', $clinicianId)
             ->with('patient')
             ->get()
             ->map(function ($patientClinician) {
                 $patient = $patientClinician->patient;
-                
-                // Obtener el último registro de salud del paciente
-                $lastRecord = HealthRecord::where('patient_id', $patient->id)
-                    ->orderBy('recorded_at', 'desc')
-                    ->first();
-                
-                // Calcular días sin registro usando zona horaria de México
-                $daysWithoutRecord = 0;
-                if ($lastRecord) {
-                    $recordDate = Carbon::parse($lastRecord->recorded_at)->setTimezone('America/Mexico_City');
-                    $nowMexico = now('America/Mexico_City');
-                    $daysWithoutRecord = (int) $nowMexico->diffInDays($recordDate);
-                }
-                
-                // Determinar nivel de riesgo basado en los últimos registros
-                $riskLevel = $this->calculateRiskLevel($patient->id);
-                
-                // Calcular TIR (Time in Range)
-                $tir = $this->calculateTIR($patient->id);
-                
                 return [
                     'id' => $patient->id,
                     'name' => $patient->name,
-                    'tir' => $tir,
-                    'riskLevel' => $riskLevel,
-                    'lastGlucose' => $lastRecord?->glucose_value,
-                    'lastSystolic' => $lastRecord?->systolic,
-                    'lastDiastolic' => $lastRecord?->diastolic,
-                    'lastReading' => $lastRecord?->recorded_at ? Carbon::parse($lastRecord->recorded_at)->setTimezone('America/Mexico_City')->format('Y-m-d H:i') : null,
-                    'daysWithoutRecord' => $daysWithoutRecord,
                 ];
             });
         
@@ -67,6 +41,84 @@ class ReportsController extends Controller{
             'success' => true,
             'data' => $patients->values(),
         ]);
+    }
+
+    /**
+     * Retorna el historial completo de registros de salud (glucosa y presión arterial)
+     * de los pacientes asignados al clínico autenticado.
+     *
+     * Parámetros opcionales:
+     *   - patientId: limita los resultados a un paciente específico asignado al clínico
+     *   - dateFrom / dateTo (YYYY-MM-DD): filtra los registros dentro del rango de fechas
+     *
+     * Cada fila del resultado corresponde a un registro individual de health_records.
+     * Si no hay filtro de fechas y no se especifica paciente, devuelve todos los registros.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAssignedPatients(Request $request)
+    {
+        $clinicianId       = Auth::id();
+        $selectedPatientId = $request->query('patientId');
+        $dateFrom          = $request->query('dateFrom');
+        $dateTo            = $request->query('dateTo');
+
+        // Obtener IDs de pacientes asignados al clínico
+        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
+            ->pluck('patient_id')
+            ->toArray();
+
+        // Si se especifica un paciente, verificar que esté asignado y filtrar
+        if ($selectedPatientId) {
+            if (!in_array((int) $selectedPatientId, $patientIds)) {
+                return response()->json(['success' => false, 'message' => 'Paciente no asignado'], 403);
+            }
+            $patientIds = [(int) $selectedPatientId];
+        }
+
+        if (empty($patientIds)) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        // Construir query de registros individuales
+        $query = HealthRecord::whereIn('patient_id', $patientIds)
+            ->with('patient')
+            ->orderBy('recorded_at', 'desc');
+
+        // Aplicar filtro por rango de fechas si se recibe
+        if ($dateFrom && $dateTo) {
+            $fromDate = Carbon::createFromFormat('Y-m-d', $dateFrom, 'America/Mexico_City')->startOfDay();
+            $toDate   = Carbon::createFromFormat('Y-m-d', $dateTo,   'America/Mexico_City')->endOfDay();
+            $query->whereBetween('recorded_at', [$fromDate, $toDate]);
+        }
+
+        // Pre-calcular TIR por paciente para evitar múltiples queries dentro del map
+        $tirByPatient = collect($patientIds)->mapWithKeys(
+            fn($id) => [$id => $this->calculateTIR($id)]
+        )->toArray();
+
+        $records = $query->get()->map(function ($record) use ($tirByPatient) {
+            $recordedAt = Carbon::parse($record->recorded_at)->setTimezone('America/Mexico_City');
+
+            return [
+                'id'        => $record->id,
+                'patientId' => $record->patient_id,
+                'name'      => $record->patient->name,
+                'type'      => $record->type,
+                'date'      => $recordedAt->format('Y-m-d H:i'),
+                // TIR: calculado sobre los últimos 30 registros de glucosa del paciente
+                'tir'       => $tirByPatient[$record->patient_id] ?? 0,
+                // Glucosa: solo presente en registros de tipo 'glucose'
+                'glucose'   => $record->glucose_value,
+                // Presión arterial: solo presente en registros de tipo 'blood_pressure'
+                'systolic'  => $record->systolic,
+                'diastolic' => $record->diastolic,
+                // Estado clínico del registro basado en el perfil del paciente
+                'status'    => $this->getMeasurementStatus($record),
+            ];
+        });
+        return response()->json(['success' => true, 'data' => $records->values()]);
     }
 
     /**
@@ -117,19 +169,36 @@ class ReportsController extends Controller{
 
     /**
      * Obtener resumen estadístico de los pacientes asignados al doctor/enfermero autenticado
+     * 
+     * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
+     * Si patientId está especificado, devuelve estadísticas de solo ese paciente
      */
     public function getSummary(Request $request)
     {
         $clinicianId = Auth::id();
+        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
         
         // Obtener fechas de filtro
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
         
         // Obtener todos los pacientes asignados al clínico
-        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
+        $query = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
             ->toArray();
+        
+        // Si se especifica un patientId, verificar que el paciente esté asignado y filtrar
+        if ($selectedPatientId) {
+            if (!in_array($selectedPatientId, $query)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente no asignado',
+                ], 403);
+            }
+            $query = [$selectedPatientId];
+        }
+        
+        $patientIds = $query;
         
         if (empty($patientIds)) {
             return response()->json([
@@ -147,6 +216,7 @@ class ReportsController extends Controller{
         
         // Obtener los pacientes con sus últimos registros
         $patients = PatientClinician::where('clinician_id', $clinicianId)
+            ->whereIn('patient_id', $patientIds)
             ->with('patient')
             ->get()
             ->map(function ($patientClinician) use ($dateFrom, $dateTo) {
@@ -219,19 +289,36 @@ class ReportsController extends Controller{
     /**
      * Obtener todos los registros de salud (mediciones) de los pacientes
      * asignados al doctor/enfermero autenticado, con filtrado por fechas
+     * 
+     * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
+     * Si patientId está especificado, devuelve solo mediciones de ese paciente
      */
     public function getMeasurements(Request $request)
     {
         $clinicianId = Auth::id();
+        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
         
         // Obtener fechas de filtro
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
         
         // Obtener IDs de pacientes asignados al clínico
-        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
+        $query = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
             ->toArray();
+        
+        // Si se especifica un patientId, verificar que esté asignado y filtrar
+        if ($selectedPatientId) {
+            if (!in_array($selectedPatientId, $query)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente no asignado',
+                ], 403);
+            }
+            $query = [$selectedPatientId];
+        }
+        
+        $patientIds = $query;
         
         if (empty($patientIds)) {
             return response()->json([
