@@ -120,3 +120,9 @@ export interface GlucoseKPIProps {
   patientProfile?: PatientProfile | null;
   glucoseHistory?: GlucosePoint[];
 }
+
+export interface HistoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  readings: Reading[];
+}

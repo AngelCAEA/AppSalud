@@ -1,6 +1,7 @@
 import type { PatientProfile } from '@/types/user';
 
 const TIME_ZONE = 'America/Mexico_City';
+type ColorIntensity = '500' | '600';
 
 function formatClockTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('es-MX', {
@@ -18,6 +19,10 @@ function zonedDateKey(date: Date): string {
 export interface ReadingStatus {
   label: string;
   color: string;
+}
+
+function withColorIntensity(colorClass: string, intensity: ColorIntensity): string {
+  return colorClass.replace(/-\d{3}$/, `-${intensity}`);
 }
 
 /**
@@ -86,6 +91,30 @@ export function formatTimestamp(iso: string): string {
 }
 
 /**
+ * Formatea solo la fecha en zona horaria de Mexico.
+ */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-MX', {
+    timeZone: TIME_ZONE,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Formatea solo la hora en zona horaria de Mexico.
+ */
+export function formatTime(iso: string, hour12 = false): string {
+  return new Date(iso).toLocaleTimeString('es-MX', {
+    timeZone: TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12,
+  });
+}
+
+/**
  * Devuelve etiqueta y color para glucosa segun rangos del perfil.
  */
 export function getGlucoseStatus(
@@ -99,6 +128,17 @@ export function getGlucoseStatus(
   if (value < 70 || value > 180) return { label: 'Alta', color: 'text-red-500' };
   if (value < min || value > max) return { label: 'Atención', color: 'text-amber-500' };
   return { label: 'Óptima', color: 'text-emerald-500' };
+}
+
+/**
+ * Devuelve clase de color para glucosa reutilizando la logica central de estado.
+ */
+export function getGlucoseColor(
+  glucose: number,
+  profile: PatientProfile | null = null,
+  intensity: ColorIntensity = '500',
+): string {
+  return withColorIntensity(getGlucoseStatus(glucose, profile).color, intensity);
 }
 
 /**
@@ -117,4 +157,16 @@ export function getPressureStatus(
   }
 
   return { label: 'Normal', color: 'text-emerald-500' };
+}
+
+/**
+ * Devuelve clase de color para presion reutilizando la logica central de estado.
+ */
+export function getPressureColor(
+  systolic: number,
+  diastolic: number,
+  profile: PatientProfile | null = null,
+  intensity: ColorIntensity = '500',
+): string {
+  return withColorIntensity(getPressureStatus(systolic, diastolic, profile).color, intensity);
 }
