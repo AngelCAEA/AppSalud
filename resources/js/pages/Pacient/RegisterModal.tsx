@@ -1,28 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Droplet, Heart, Save, ArrowLeft, Sun, Utensils, Moon, Shuffle } from 'lucide-react';
-import { route } from 'ziggy-js';
-
-interface MeasurementContext {
-  id: number;
-  slug: string;
-  display_name: string;
-  description: string;
-}
-
-interface RegisterModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (type: 'glucose' | 'blood_pressure', glucose: number | null, systolic: number | null, diastolic: number | null, contextId?: number) => Promise<void>;
-}
-
-type RegistrationStep = 'select' | 'glucose' | 'pressure';
-
-interface ContextButtonProps {
-  context: MeasurementContext;
-  isSelected: boolean;
-  onSelect: () => void;
-  color: 'green' | 'red';
-}
+import { useRegisterModal } from '@/hooks/pacient/Register';
+import type { ContextButtonProps, RegisterModalProps } from '@/types/register';
 
 /** Mapa de iconos por slug de contexto de medición */
 const CONTEXT_ICONS: Record<string, React.ReactNode> = {
@@ -73,124 +52,41 @@ function ContextButton({ context, isSelected, onSelect, color }: ContextButtonPr
 }
 
 export function RegisterModal({ isOpen, onClose, onSubmit }: RegisterModalProps) {
-  const [step, setStep] = useState<RegistrationStep>('select');
-  const [glucose, setGlucose] = useState('');
-  const [selectedContextId, setSelectedContextId] = useState<number | null>(null);
-  const [systolic, setSystolic] = useState('');
-  const [diastolic, setDiastolic] = useState('');
-  const [measurementContexts, setMeasurementContexts] = useState<MeasurementContext[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchMeasurementContexts();
-      setStep('select');
-      setGlucose('');
-      setSelectedContextId(null);
-      setSystolic('');
-      setDiastolic('');
-    }
-  }, [isOpen]);
+  const {
+    step,
+    glucose,
+    selectedContextId,
+    systolic,
+    diastolic,
+    measurementContexts,
+    isLoading,
+    setStep,
+    setGlucose,
+    setSelectedContextId,
+    setSystolic,
+    setDiastolic,
+    handleClose,
+    handleBack,
+    handleGlucoseSubmit: submitGlucose,
+    handlePressureSubmit: submitPressure,
+  } = useRegisterModal({
+    isOpen,
+    onClose,
+    onSubmit,
+  });
 
   if (!isOpen) return null;
-
-  /**
-   * Carga los contextos de medición disponibles desde la API.
-   *
-   * Ruta Laravel : GET /measurement-contexts  →  measurement-contexts.index
-   * Controlador  : MeasurementContextController@index
-   * Respuesta    : MeasurementContext[]  (id, slug, display_name, description)
-   *
-   * Los contextos se muestran como botones seleccionables (ContextButton) en los
-   * formularios de glucosa y presión arterial para indicar el momento de la toma.
-   *
-   * En caso de fallo de red o error HTTP se carga un set de datos de ejemplo para
-   * que el modal siga siendo operable sin conexión al servidor.
-   *
-   * Para modificar los contextos disponibles edita la tabla `measurement_contexts`
-   * o el seeder correspondiente; no es necesario tocar este componente.
-   */
-  const fetchMeasurementContexts = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(route('measurement-contexts.index'));
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const data = await response.json();
-      setMeasurementContexts(data);
-    } catch (error) {
-      console.error('Error loading measurement contexts:', error);
-      // Fallback: usar datos de ejemplo si la API falla
-      setMeasurementContexts([
-        {
-          id: 1,
-          slug: 'fasting',
-          display_name: 'En Ayunas',
-          description: 'Medición realizada después de 8-12 horas sin comer'
-        },
-        {
-          id: 2,
-          slug: 'post_meal',
-          display_name: 'Después de Comer',
-          description: 'Medición realizada 2 horas después de la comida'
-        },
-        {
-          id: 3,
-          slug: 'before_bed',
-          display_name: 'Antes de Dormir',
-          description: 'Medición realizada antes de acostarse'
-        },
-        {
-          id: 4,
-          slug: 'random',
-          display_name: 'Aleatorio',
-          description: 'Medición realizada en cualquier momento del día'
-        }
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    setStep('select');
-    setGlucose('');
-    setSelectedContextId(null);
-    setSystolic('');
-    setDiastolic('');
-    onClose();
-  };
-
-  const handleBack = () => {
-    setStep('select');
-  };
 
   // Función para manejar el envío del formulario de glucosa
   const handleGlucoseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const glucoseValue = parseInt(glucose);
-    if (glucoseValue && selectedContextId) {
-      try {
-        await onSubmit('glucose', glucoseValue, null, null, selectedContextId);
-      } catch (error) {
-        console.error('Error al guardar glucosa:', error);
-      }
-    }
+    await submitGlucose();
   };
 
   // Función para manejar el envío del formulario de presión arterial
   const handlePressureSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const systolicValue = parseInt(systolic);
-    const diastolicValue = parseInt(diastolic);
-    if (systolicValue && diastolicValue && selectedContextId) {
-      try {
-        await onSubmit('blood_pressure', null, systolicValue, diastolicValue, selectedContextId);
-      } catch (error) {
-        console.error('Error al guardar presión:', error);
-      }
-    }
+    await submitPressure();
   };
 
   return (

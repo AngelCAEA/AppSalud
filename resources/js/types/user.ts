@@ -88,62 +88,6 @@ export interface Reading {
 }
 
 /**
- * Tipo de lectura que se envia al backend para crear un registro.
- */
-export type ReadingType = 'glucose' | 'blood_pressure';
-
-/**
- * Parametros requeridos por el hook de la pantalla de paciente.
- */
-export interface UsePacientParams {
-  csrfToken: string;
-  showSuccess: (message: string) => void;
-  showError: (message: string) => void;
-  onSaved?: () => void;
-}
-
-/**
- * Forma de un registro de salud tal como llega desde la API.
- */
-export interface ApiHealthRecord {
-  id: number;
-  glucose_value: number | null;
-  systolic: number | null;
-  diastolic: number | null;
-  type: 'glucose' | 'blood_pressure' | 'both';
-  recorded_at: string | null;
-  created_at: string;
-  context_id: number | null;
-}
-
-/**
- * Respuesta esperada del endpoint del perfil del paciente.
- */
-export interface PatientProfileResponse {
-  data: PatientProfile;
-}
-
-/**
- * Contrato de salida del hook usePacient.
- */
-export interface UsePacientResult {
-  readings: Reading[];
-  patientProfile: PatientProfile | null;
-  isLoading: boolean;
-  profileLoading: boolean;
-  latestGlucoseReading: Reading | undefined;
-  latestPressureReading: Reading | undefined;
-  loadReadings: (showLoading?: boolean) => Promise<void>;
-  handleAddReading: (
-    type: ReadingType,
-    glucose: number | null,
-    systolic: number | null,
-    diastolic: number | null,
-    contextId?: number,
-  ) => Promise<void>;
-}
-
-/**
  * Agrupa la distribución de glucosa y presión para reportes.
  */
 export interface DistributionData {

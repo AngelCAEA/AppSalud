@@ -1,14 +1,13 @@
 import { route } from 'ziggy-js';
 import { useEffect, useState } from 'react';
+import { useRegister } from '@/hooks/pacient/Register';
+import type { PatientProfile, Reading } from '@/types/user';
 import type {
 	ApiHealthRecord,
-	PatientProfile,
 	PatientProfileResponse,
-	Reading,
-	ReadingType,
 	UsePacientParams,
 	UsePacientResult,
-} from '@/types/user';
+} from '@/types/register';
 
 /**
  * Hook principal de la pantalla de paciente.
@@ -86,86 +85,14 @@ export function usePacient({ csrfToken, showSuccess, showError, onSaved }: UsePa
 		}
 	};
 
-	/**
-	 * Valida y guarda una nueva lectura de glucosa o presion arterial.
-	 */
-	const handleAddReading = async (
-		type: ReadingType,
-		glucose: number | null,
-		systolic: number | null,
-		diastolic: number | null,
-		contextId?: number,
-	) => {
-		if (patientProfile) {
-			if (glucose !== null) {
-				if (glucose < patientProfile.glucose_min) {
-					showError(`Glucosa baja: ${glucose} mg/dL (minimo recomendado: ${patientProfile.glucose_min})`);
-				} else if (glucose > patientProfile.glucose_max) {
-					showError(`Glucosa alta: ${glucose} mg/dL (maximo recomendado: ${patientProfile.glucose_max})`);
-				}
-			}
-
-			if (systolic !== null && systolic > patientProfile.systolic_max) {
-				showError(`Presion sistolica elevada: ${systolic} mmHg (maximo recomendado: ${patientProfile.systolic_max})`);
-			}
-
-			if (diastolic !== null && diastolic > patientProfile.diastolic_max) {
-				showError(`Presion diastolica elevada: ${diastolic} mmHg (maximo recomendado: ${patientProfile.diastolic_max})`);
-			}
-		}
-
-		try {
-			const payload: {
-				type: ReadingType;
-				context_id: number | null;
-				glucose_value?: number;
-				systolic?: number;
-				diastolic?: number;
-			} = {
-				type,
-				context_id: contextId ?? null,
-			};
-
-			if (glucose !== null) payload.glucose_value = glucose;
-			if (systolic !== null) payload.systolic = systolic;
-			if (diastolic !== null) payload.diastolic = diastolic;
-
-			const response = await fetch(route('health-records.store'), {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Accept: 'application/json',
-					'X-CSRF-TOKEN': csrfToken,
-				},
-				body: JSON.stringify(payload),
-			});
-
-			if (!response.ok) {
-				try {
-					const errorData = (await response.json()) as { message?: string };
-					showError(errorData.message ?? 'Error al guardar el registro');
-				} catch {
-					showError('Error al guardar el registro. Intenta recargar la pagina.');
-				}
-				return;
-			}
-
-			const data = (await response.json()) as { success?: boolean };
-
-			if (data.success) {
-				showSuccess('Registro guardado exitosamente');
-				await loadReadings(false);
-				onSaved?.();
-				return;
-			}
-
-			showError('Error al guardar el registro. Por favor intenta de nuevo.');
-			return;
-		} catch (error) {
-			showError('Hubo un error al guardar el registro, contacta al administrador: ' + (error instanceof Error ? error.message : ''));
-			return;
-		}
-	};
+	const { handleAddReading } = useRegister({
+		csrfToken,
+		patientProfile,
+		showSuccess,
+		showError,
+		onSaved,
+		onRefreshReadings: () => loadReadings(false),
+	});
 
 	useEffect(() => {
 		loadPatientProfile();
