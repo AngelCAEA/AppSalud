@@ -94,3 +94,29 @@ export interface DistributionData {
   glucose: GlucoseDistribution;
   pressure: PressureDistribution;
 }
+
+export interface HistoryCardProps {
+  readings: Reading[];
+  onViewAll: () => void;
+  patientProfile: PatientProfile | null;
+}
+
+/**
+ * Punto de datos para el sparkline de glucosa.
+ */
+export interface GlucosePoint {
+  value: number;
+  timestamp: string;
+}
+
+/**
+ * Props del componente de resumen principal de glucosa/presion.
+ */
+export interface GlucoseKPIProps {
+  value: number;
+  timestamp: string;
+  latestPressure?: { systolic: number; diastolic: number } | null;
+  pressureTimestamp?: string | null;
+  patientProfile?: PatientProfile | null;
+  glucoseHistory?: GlucosePoint[];
+}

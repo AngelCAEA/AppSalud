@@ -1,107 +1,7 @@
 import { TrendingUp } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-
-// ── Tipos ──────────────────────────────────────────────────────────────────────
-
-/** Un punto de datos para el sparkline de glucosa */
-interface GlucosePoint {
-  /** Valor de glucosa en mg/dL */
-  value: number;
-  /** ISO timestamp del registro */
-  timestamp: string;
-}
-
-interface GlucoseKPIProps {
-  /** Último valor de glucosa registrado (mg/dL) */
-  value: number;
-  /** ISO timestamp del registro */
-  timestamp: string;
-  /** Presión arterial más reciente del paciente (opcional) */
-  latestPressure?: { systolic: number; diastolic: number } | null;
-  /** Timestamp del registro de presión (opcional) */
-  pressureTimestamp?: string | null;
-  /** Perfil del paciente con límites personalizados */
-  patientProfile?: {
-    glucose_min: number;
-    glucose_max: number;
-    systolic_max: number;
-    diastolic_max: number;
-  } | null;
-  /**
-   * Últimos registros de glucosa para el sparkline (máx. recomendado: 8).
-   * Deben llegar en cualquier orden; el componente los ordena cronológicamente.
-   * Si no se proveen o hay menos de 2 puntos, el sparkline no se renderiza.
-   */
-  glucoseHistory?: GlucosePoint[];
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const TIME_ZONE = 'America/Mexico_City';
-
-/**
- * Devuelve las clases de color del valor de glucosa según rangos clínicos.
- * Si existe perfil del paciente, usa sus límites personalizados.
- */
-function getGlucoseColor(
-  glucose: number,
-  profile?: GlucoseKPIProps['patientProfile'],
-): string {
-  const min = profile?.glucose_min ?? 90;
-  const max = profile?.glucose_max ?? 140;
-  if (glucose < 70 || glucose > 180) return 'text-red-500';
-  if (glucose < min || glucose > max) return 'text-amber-500';
-  return 'text-emerald-500';
-}
-
-/**
- * Devuelve la etiqueta de estado según el valor de glucosa.
- */
-function getGlucoseStatus(
-  glucose: number,
-  profile?: GlucoseKPIProps['patientProfile'],
-): string {
-  const min = profile?.glucose_min ?? 90;
-  const max = profile?.glucose_max ?? 140;
-  if (glucose < 70) return 'Baja';
-  if (glucose > 180) return 'Alta';
-  if (glucose < min || glucose > max) return 'Atención';
-  return 'Óptima';
-}
-
-/**
- * Devuelve la etiqueta de estado de la presión arterial según límites del perfil.
- */
-function getPressureStatus(
-  systolic: number,
-  diastolic: number,
-  profile?: GlucoseKPIProps['patientProfile'],
-): string {
-  const maxS = profile?.systolic_max ?? 130;
-  const maxD = profile?.diastolic_max ?? 85;
-  if (systolic > maxS || diastolic > maxD) return 'Elevada';
-  return 'Normal';
-}
-
-/**
- * Calcula el tiempo transcurrido desde un timestamp hasta ahora
- * y devuelve una etiqueta legible para la sección de variación.
- *
- * Ejemplos de salida: "45 min", "2 h", "1 d 3 h", "3 d"
- */
-function timeSinceReading(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const totalMinutes = Math.floor(diffMs / 60_000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  const days = Math.floor(hours / 24);
-  const remHours = hours % 24;
-
-  if (days > 0) return remHours > 0 ? `${days} d ${remHours} h` : `${days} d`;
-  if (hours > 0) return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
-  return `${Math.max(1, minutes)} min`;
-}
-
+import { formatTimestamp, getGlucoseStatus, getPressureStatus, timeSinceReading } from '@/utils/helpers';
+import type { GlucoseKPIProps, GlucosePoint } from '@/types/user';
 /**
  * Sparkline de glucosa — gráfica de línea minimalista sin ejes ni tooltips.
  *
@@ -146,33 +46,6 @@ function GlucoseSparkline({
   );
 }
 
-/**
- * Formatea un timestamp mostrando solo la hora si es hoy,
- * o fecha + hora si es un día diferente.
- */
-function formatTimestamp(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
-  const isToday =
-    date.toLocaleDateString('en-CA', { timeZone: TIME_ZONE }) ===
-    now.toLocaleDateString('en-CA', { timeZone: TIME_ZONE });
-
-  const time = date.toLocaleTimeString('es-MX', {
-    timeZone: TIME_ZONE,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  if (isToday) return `Hoy, ${time}`;
-  const day = date.toLocaleDateString('es-MX', {
-    timeZone: TIME_ZONE,
-    day: '2-digit',
-    month: 'short',
-  });
-  return `${day} ${time}`;
-}
-
 // ── Componente ────────────────────────────────────────────────────────────────
 
 /**
@@ -194,20 +67,22 @@ export function GlucoseKPI({
   glucoseHistory = [],
 }: GlucoseKPIProps) {
   const rounded = Math.round(value);
-  const glucoseColor = getGlucoseColor(rounded, patientProfile);
-  const glucoseStatus = getGlucoseStatus(rounded, patientProfile);
+  const glucoseInfo = getGlucoseStatus(rounded, patientProfile ?? null);
+  const glucoseColor = glucoseInfo.color;
+  const glucoseStatus = glucoseInfo.label === 'Alta' && rounded < 70 ? 'Baja' : glucoseInfo.label;
 
-  const pressureStatus = latestPressure
-    ? getPressureStatus(latestPressure.systolic, latestPressure.diastolic, patientProfile)
+  const pressureInfo = latestPressure
+    ? getPressureStatus(latestPressure.systolic, latestPressure.diastolic, patientProfile ?? null)
     : null;
+  const pressureStatus = pressureInfo?.label ?? null;
 
   /**
    * Color hex de la línea del sparkline, sincronizado con el estado de glucosa.
    * Se usa como prop de recharts (que no acepta clases Tailwind directamente).
    */
   const sparklineColor =
-    glucoseStatus === 'Óptima' ? '#10b981' :
-    glucoseStatus === 'Atención' ? '#f59e0b' : '#ef4444';
+    glucoseColor === 'text-emerald-500' ? '#10b981' :
+    glucoseColor === 'text-amber-500' ? '#f59e0b' : '#ef4444';
 
   /** Color del badge de estado de glucosa */
   const statusBadgeClass =
