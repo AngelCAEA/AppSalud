@@ -1,21 +1,8 @@
 import { X, Activity, Heart, Filter } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { formatDate, formatTime, getGlucoseColor, getPressureColor } from '@/utils/helpers';
+import type { HistoryModalProps } from '@/types/user';
 
-interface Reading {
-  id: string;
-  glucose: number | null;
-  pressure: { systolic: number; diastolic: number } | null;
-  timestamp: string;
-  type: 'glucose' | 'pressure' | 'both';
-}
-
-interface HistoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  readings: Reading[];
-}
-
-type DateFilter = 'all' | 'today' | 'week' | 'month' | 'custom';
 
 export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,29 +38,6 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const getGlucoseColor = (glucose: number) => {
-    if (glucose < 70 || glucose > 180) return 'text-red-600';
-    if (glucose < 90 || glucose > 140) return 'text-amber-600';
-    return 'text-green-600';
-  };
-
-  const getPressureColor = (systolic: number, diastolic: number) => {
-    if (systolic > 130 || diastolic > 85) return 'text-orange-600';
-    return 'text-green-600';
-  };
-
-  const formatDate = (date: string) => {
-    const d = new Date(date);
-    const timeZone = 'America/Mexico_City';
-    return d.toLocaleDateString('es-MX', { timeZone, day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
-
-  const formatTime = (date: string) => {
-    const d = new Date(date);
-    const timeZone = 'America/Mexico_City';
-    return d.toLocaleTimeString('es-MX', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   if (!isOpen) return null;
@@ -154,7 +118,15 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
               <p className="text-base">No hay registros disponibles</p>
             </div>
           ) : (
-            paginatedReadings.map((reading) => (
+            paginatedReadings.map((reading) => {
+              const pressureColor = reading.pressure
+                ? getPressureColor(reading.pressure.systolic, reading.pressure.diastolic, null, '600')
+                : null;
+              const glucoseColor = reading.glucose !== null
+                ? getGlucoseColor(reading.glucose, null, '600')
+                : null;
+
+              return (
               <div
                 key={reading.id}
                 className="flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-800 px-5 py-4"
@@ -165,7 +137,7 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
                     {formatDate(reading.timestamp)}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                    {formatTime(reading.timestamp)}
+                    {formatTime(reading.timestamp, true)}
                   </p>
                 </div>
 
@@ -173,7 +145,7 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
                 <div className="flex-1 flex justify-center">
                   {reading.pressure !== null ? (
                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold
-                      ${getPressureColor(reading.pressure.systolic, reading.pressure.diastolic) === 'text-orange-600'
+                      ${pressureColor === 'text-orange-600'
                         ? 'border-orange-400/40 bg-orange-900/20 text-orange-400 dark:border-orange-500/40 dark:bg-orange-900/30 dark:text-orange-400'
                         : 'border-emerald-400/40 bg-emerald-900/20 text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-400'
                       }`}
@@ -191,9 +163,9 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
                 <div className="flex-1 flex justify-center">
                   {reading.glucose !== null ? (
                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold
-                      ${getGlucoseColor(reading.glucose) === 'text-red-600'
+                      ${glucoseColor === 'text-red-600'
                         ? 'border-red-400/40 bg-red-900/20 text-red-500 dark:border-red-500/40 dark:bg-red-900/30 dark:text-red-400'
-                        : getGlucoseColor(reading.glucose) === 'text-amber-600'
+                        : glucoseColor === 'text-amber-600'
                         ? 'border-amber-400/40 bg-amber-900/20 text-amber-600 dark:border-amber-500/40 dark:bg-amber-900/30 dark:text-amber-400'
                         : 'border-emerald-400/40 bg-emerald-900/20 text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-400'
                       }`}
@@ -207,7 +179,8 @@ export function HistoryModal({ isOpen, onClose, readings }: HistoryModalProps) {
                   )}
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
 

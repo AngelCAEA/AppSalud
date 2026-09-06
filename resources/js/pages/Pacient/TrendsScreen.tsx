@@ -14,7 +14,6 @@
  *
  * Dependencias: recharts, lucide-react, PacientLayout
  */
-
 import { ArrowLeft, Activity, Heart, Droplet } from 'lucide-react';
 import {
   LineChart,
@@ -28,175 +27,45 @@ import {
   ReferenceArea,
 } from 'recharts';
 import PacientLayout from '@/layouts/pacient-layout';
-
-// ─── Tipos ──────────────────────────────────────────────────────────────────
-
-interface Reading {
-  id: string;
-  glucose: number | null;
-  pressure: { systolic: number; diastolic: number } | null;
-  timestamp: string;
-  type: 'glucose' | 'pressure' | 'both';
-}
-
-interface PatientProfile {
-  glucose_min: number;
-  glucose_max: number;
-  systolic_max: number;
-  diastolic_max: number;
-  type_diabetes: string | null;
-}
-
-interface TrendsScreenProps {
-  readings: Reading[];
-  patientProfile: PatientProfile | null;
-  onBack: () => void;
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Umbrales de zona de glucosa utilizados en la gráfica y en las cards.
- * Zona "En Rango" proviene del patientProfile cuando está disponible.
- */
-const GLUCOSE_RISK_HIGH  = 165; // mg/dL — umbral riesgo alto
-const GLUCOSE_ATTN_HIGH  = 140; // mg/dL — umbral atención alta
-const GLUCOSE_ATTN_LOW   = 90;  // mg/dL — umbral atención baja
-const GLUCOSE_RISK_LOW   = 60;  // mg/dL — umbral riesgo bajo
-const CHART_Y_MAX        = 220;
-const CHART_Y_MIN        = 50;
-
-/**
- * Determina el color Tailwind para el valor de glucosa según estado.
- * @param avg   Valor promedio o puntual de glucosa
- * @param prof  PatientProfile (umbrales personalizados)
- */
-function glucoseColor(avg: number, prof: PatientProfile | null): string {
-  const min = prof?.glucose_min ?? GLUCOSE_ATTN_LOW;
-  const max = prof?.glucose_max ?? GLUCOSE_ATTN_HIGH;
-  if (avg >= min && avg <= max) return 'text-emerald-600';
-  if (avg < GLUCOSE_RISK_LOW || avg > GLUCOSE_RISK_HIGH) return 'text-red-500';
-  return 'text-amber-500';
-}
-
-/**
- * Etiqueta de estado para la glucosa.
- * @param avg   Valor promedio de glucosa
- * @param prof  PatientProfile
- */
-function glucoseStatus(avg: number, prof: PatientProfile | null): { label: string; color: string } {
-  const min = prof?.glucose_min ?? GLUCOSE_ATTN_LOW;
-  const max = prof?.glucose_max ?? GLUCOSE_ATTN_HIGH;
-  if (avg >= min && avg <= max)  return { label: 'Óptimo',   color: 'text-emerald-600' };
-  if (avg < GLUCOSE_RISK_LOW || avg > GLUCOSE_RISK_HIGH) return { label: avg > GLUCOSE_RISK_HIGH ? 'Alto' : 'Bajo', color: 'text-red-500' };
-  return { label: 'Atención', color: 'text-amber-500' };
-}
-
-/**
- * Etiqueta de estado para la presión arterial según patientProfile.
- * Niveles: Normal → Normal Alta → Elevada
- */
-function pressureStatus(
-  avgSys: number,
-  avgDia: number,
-  prof: PatientProfile | null,
-): { label: string; color: string; recommendation: string } {
-  const sysMax = prof?.systolic_max ?? 130;
-  const diaMax = prof?.diastolic_max ?? 85;
-
-  if (avgSys <= sysMax && avgDia <= diaMax) {
-    return {
-      label: 'Normal',
-      color: 'text-emerald-600',
-      recommendation: 'Mantén tu estilo de vida actual',
-    };
-  }
-  if (avgSys <= sysMax + 10 && avgDia <= diaMax + 5) {
-    return {
-      label: 'Normal Alta',
-      color: 'text-amber-500',
-      recommendation: 'Monitorear ingesta de sodio',
-    };
-  }
-  return {
-    label: 'Elevada',
-    color: 'text-red-500',
-    recommendation: 'Consultar con tu médico',
-  };
-}
+import {
+  getTrendGlucoseStatus,
+  getTrendPressureStatus,
+} from '@/utils/helpers';
+import {
+  GLUCOSE_CHART_Y_MAX,
+  GLUCOSE_CHART_Y_MIN,
+  GLUCOSE_COLOR_OK,
+  GLUCOSE_RISK_HIGH,
+  GLUCOSE_RISK_LOW,
+  GLUCOSE_ZONE_AREAS,
+  PRESSURE_CHART_Y_MAX,
+  PRESSURE_CHART_Y_MIN,
+  buildTrendsAnalytics,
+  getGlucoseChartDotColor,
+} from '@/utils/configurationGraphis';
+import type { TrendsScreenProps } from '@/types/user';
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
 export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenProps) {
-  const timeZone = 'America/Mexico_City';
-
-  // ── Ventana de 30 días ───────────────────────────────────────────────────
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  // ── Datos de glucosa ordenados cronológicamente ──────────────────────────
-  const glucoseData = readings
-    .filter(r => r.glucose !== null && new Date(r.timestamp) >= thirtyDaysAgo)
-    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map(r => ({
-      date: new Date(r.timestamp).toLocaleDateString('es-MX', {
-        timeZone,
-        day: 'numeric',
-        month: 'short',
-      }),
-      glucose: r.glucose,
-    }));
-
-  // ── Datos de presión ordenados cronológicamente ──────────────────────────
-  const pressureData = readings
-    .filter(r => r.pressure !== null && new Date(r.timestamp) >= thirtyDaysAgo)
-    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map(r => ({
-      date: new Date(r.timestamp).toLocaleDateString('es-MX', {
-        timeZone,
-        day: 'numeric',
-        month: 'short',
-      }),
-      systolic: r.pressure!.systolic,
-      diastolic: r.pressure!.diastolic,
-    }));
-
-  const hasGlucoseData  = glucoseData.length > 0;
-  const hasPressureData = pressureData.length > 0;
-
-  // ── Punto pico de glucosa (para la línea de referencia vertical) ─────────
-  /** Registro con el valor más alto de glucosa para dibujar la línea de pico */
-  const peakGlucose = hasGlucoseData
-    ? glucoseData.reduce((mx, d) => (d.glucose ?? 0) > (mx.glucose ?? 0) ? d : mx, glucoseData[0])
-    : null;
-
-  // ── Estadísticas de glucosa ──────────────────────────────────────────────
-  const glucoseReadings = readings.filter(r => r.glucose !== null && new Date(r.timestamp) >= thirtyDaysAgo);
-  const avgGlucose = glucoseReadings.length > 0
-    ? Math.round(glucoseReadings.reduce((s, r) => s + Number(r.glucose), 0) / glucoseReadings.length)
-    : null;
-
-  /** Porcentaje de lecturas dentro del rango óptimo (patientProfile.glucose_min/max) */
-  const glucoseMin = patientProfile?.glucose_min ?? GLUCOSE_ATTN_LOW;
-  const glucoseMax = patientProfile?.glucose_max ?? GLUCOSE_ATTN_HIGH;
-  const inRangeCount = glucoseReadings.filter(r => Number(r.glucose) >= glucoseMin && Number(r.glucose) <= glucoseMax).length;
-  const percentInRange = glucoseReadings.length > 0
-    ? Math.round((inRangeCount / glucoseReadings.length) * 100)
-    : null;
-
-  // ── Estadísticas de presión ──────────────────────────────────────────────
-  const pressureReadings = readings.filter(r => r.pressure !== null && new Date(r.timestamp) >= thirtyDaysAgo);
-  const avgSys = pressureReadings.length > 0
-    ? Math.round(pressureReadings.reduce((s, r) => s + Number(r.pressure!.systolic), 0) / pressureReadings.length)
-    : null;
-  const avgDia = pressureReadings.length > 0
-    ? Math.round(pressureReadings.reduce((s, r) => s + Number(r.pressure!.diastolic), 0) / pressureReadings.length)
-    : null;
+  const {
+    glucoseData,
+    pressureData,
+    hasGlucoseData,
+    hasPressureData,
+    peakGlucose,
+    glucoseMin,
+    glucoseMax,
+    avgGlucose,
+    avgSys,
+    avgDia,
+    percentInRange,
+  } = buildTrendsAnalytics(readings, patientProfile);
 
   // ── Status calculados ────────────────────────────────────────────────────
-  const gStatus = avgGlucose != null ? glucoseStatus(avgGlucose, patientProfile) : null;
-  const pStatus = avgSys != null && avgDia != null ? pressureStatus(avgSys, avgDia, patientProfile) : null;
-  const gColor  = avgGlucose != null ? glucoseColor(avgGlucose, patientProfile) : 'text-gray-400';
+  const gStatus = avgGlucose != null ? getTrendGlucoseStatus(avgGlucose, patientProfile) : null;
+  const pStatus = avgSys != null && avgDia != null ? getTrendPressureStatus(avgSys, avgDia, patientProfile) : null;
+  const gColor  = avgGlucose != null ? gStatus?.color ?? 'text-gray-400' : 'text-gray-400';
 
   // ── Tooltip glucosa personalizado ────────────────────────────────────────
   /**
@@ -206,7 +75,7 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
   const GlucoseTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length || payload[0].value == null) return null;
     const val = payload[0].value as number;
-    const { label, color } = glucoseStatus(val, patientProfile);
+    const { label, color } = getTrendGlucoseStatus(val, patientProfile);
     return (
       <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-left">
         <p className="text-xs text-gray-500 mb-1">{payload[0].payload.date}</p>
@@ -225,7 +94,7 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
     if (!active || !payload?.length || payload[0].value == null) return null;
     const sys = payload[0].value as number;
     const dia = payload[1]?.value as number;
-    const { label, color } = pressureStatus(sys, dia, patientProfile);
+    const { label, color } = getTrendPressureStatus(sys, dia, patientProfile);
     return (
       <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-left">
         <p className="text-xs text-gray-500 mb-1">{payload[0].payload.date}</p>
@@ -235,7 +104,6 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
     );
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <PacientLayout
       title="Análisis Médico"
@@ -281,7 +149,7 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
                   />
                   <YAxis
                     tick={{ fontSize: 11, fill: '#9ca3af' }}
-                    domain={[CHART_Y_MIN, CHART_Y_MAX]}
+                    domain={[GLUCOSE_CHART_Y_MIN, GLUCOSE_CHART_Y_MAX]}
                   />
                   <Tooltip content={<GlucoseTooltip />} />
 
@@ -293,29 +161,29 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
                    * Ámbar → atención: 140-165 (alta)   o  60-90 (baja)
                    * Verde → en rango: 90-140 (zona óptima)
                    */}
-                  {/* Zona riesgo alto */}
-                  <ReferenceArea y1={GLUCOSE_RISK_HIGH} y2={CHART_Y_MAX} fill="#ef4444" fillOpacity={0.10} stroke="none" />
-                  {/* Zona atención alta */}
-                  <ReferenceArea y1={GLUCOSE_ATTN_HIGH} y2={GLUCOSE_RISK_HIGH} fill="#f59e0b" fillOpacity={0.10} stroke="none" />
-                  {/* Zona en rango / óptima */}
-                  <ReferenceArea y1={GLUCOSE_ATTN_LOW} y2={GLUCOSE_ATTN_HIGH} fill="#10b981" fillOpacity={0.10} stroke="none" />
-                  {/* Zona atención baja */}
-                  <ReferenceArea y1={GLUCOSE_RISK_LOW} y2={GLUCOSE_ATTN_LOW} fill="#f59e0b" fillOpacity={0.10} stroke="none" />
-                  {/* Zona riesgo bajo */}
-                  <ReferenceArea y1={CHART_Y_MIN} y2={GLUCOSE_RISK_LOW} fill="#ef4444" fillOpacity={0.10} stroke="none" />
+                  {GLUCOSE_ZONE_AREAS.map((zone) => (
+                    <ReferenceArea
+                      key={`${zone.y1}-${zone.y2}-${zone.fill}`}
+                      y1={zone.y1}
+                      y2={zone.y2}
+                      fill={zone.fill}
+                      fillOpacity={zone.fillOpacity}
+                      stroke="none"
+                    />
+                  ))}
 
                   {/* Línea vertical en el pico de glucosa */}
                   {peakGlucose && (
                     <ReferenceLine
                       x={peakGlucose.date}
-                      stroke="#10b981"
+                      stroke={GLUCOSE_COLOR_OK}
                       strokeDasharray="5 4"
                       strokeWidth={1.5}
                       label={{
                         value: `Pico: ${peakGlucose.glucose} mg/dL`,
                         position: 'insideTopRight',
                         fontSize: 10,
-                        fill: '#10b981',
+                        fill: GLUCOSE_COLOR_OK,
                         dy: -4,
                       }}
                     />
@@ -325,17 +193,12 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
                   <Line
                     type="monotone"
                     dataKey="glucose"
-                    stroke="#10b981"
+                    stroke={GLUCOSE_COLOR_OK}
                     strokeWidth={2.5}
                     dot={(props: any) => {
                       const { cx, cy, value } = props;
                       if (value == null) return <></>;
-                      const fill =
-                        value < GLUCOSE_RISK_LOW || value > GLUCOSE_RISK_HIGH
-                          ? '#ef4444'
-                          : value < GLUCOSE_ATTN_LOW || value > GLUCOSE_ATTN_HIGH
-                          ? '#f59e0b'
-                          : '#10b981';
+                      const fill = getGlucoseChartDotColor(value as number);
                       return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={4} fill={fill} stroke="#fff" strokeWidth={1.5} />;
                     }}
                     activeDot={{ r: 6 }}
@@ -390,7 +253,7 @@ export function TrendsScreen({ readings, patientProfile, onBack }: TrendsScreenP
                   />
                   <YAxis
                     tick={{ fontSize: 11, fill: '#9ca3af' }}
-                    domain={[60, 170]}
+                    domain={[PRESSURE_CHART_Y_MIN, PRESSURE_CHART_Y_MAX]}
                   />
                   <Tooltip content={<PressureTooltip />} />
 
