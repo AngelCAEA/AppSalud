@@ -8,7 +8,6 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { auth } = usePage<SharedData>().props;
-  console.log('auth completo:', JSON.stringify(auth));
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -22,7 +21,6 @@ export function UserMenu() {
   }, []);
 
   const handleViewProfile = () => {
-    console.log('Ver perfil');
     setIsOpen(false);
     // Aquí puedes agregar la navegación al perfil
   };
