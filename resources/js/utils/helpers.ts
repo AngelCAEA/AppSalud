@@ -21,6 +21,10 @@ export interface ReadingStatus {
   color: string;
 }
 
+export interface PressureRecommendationStatus extends ReadingStatus {
+  recommendation: string;
+}
+
 function withColorIntensity(colorClass: string, intensity: ColorIntensity): string {
   return colorClass.replace(/-\d{3}$/, `-${intensity}`);
 }
@@ -93,8 +97,18 @@ export function formatTimestamp(iso: string): string {
 /**
  * Formatea solo la fecha en zona horaria de Mexico.
  */
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-MX', {
+export function formatDate(iso: string, format: 'full' | 'short' = 'full'): string {
+  const date = new Date(iso);
+
+  if (format === 'short') {
+    return date.toLocaleDateString('es-MX', {
+      timeZone: TIME_ZONE,
+      day: 'numeric',
+      month: 'short',
+    });
+  }
+
+  return date.toLocaleDateString('es-MX', {
     timeZone: TIME_ZONE,
     day: '2-digit',
     month: '2-digit',
@@ -169,4 +183,57 @@ export function getPressureColor(
   intensity: ColorIntensity = '500',
 ): string {
   return withColorIntensity(getPressureStatus(systolic, diastolic, profile).color, intensity);
+}
+
+/**
+ * Estado de glucosa para analitica de tendencias (rangos y etiquetas medicas).
+ */
+export function getTrendGlucoseStatus(
+  glucose: number,
+  profile: PatientProfile | null,
+): ReadingStatus {
+  const min = profile?.glucose_min ?? 90;
+  const max = profile?.glucose_max ?? 140;
+  const riskLow = 60;
+  const riskHigh = 165;
+
+  if (glucose >= min && glucose <= max) return { label: 'Óptimo', color: 'text-emerald-600' };
+  if (glucose < riskLow || glucose > riskHigh) {
+    return { label: glucose > riskHigh ? 'Alto' : 'Bajo', color: 'text-red-500' };
+  }
+  return { label: 'Atención', color: 'text-amber-500' };
+}
+
+/**
+ * Estado de presion para tendencias con recomendacion breve.
+ */
+export function getTrendPressureStatus(
+  systolic: number,
+  diastolic: number,
+  profile: PatientProfile | null,
+): PressureRecommendationStatus {
+  const sysMax = profile?.systolic_max ?? 130;
+  const diaMax = profile?.diastolic_max ?? 85;
+
+  if (systolic <= sysMax && diastolic <= diaMax) {
+    return {
+      label: 'Normal',
+      color: 'text-emerald-600',
+      recommendation: 'Mantén tu estilo de vida actual',
+    };
+  }
+
+  if (systolic <= sysMax + 10 && diastolic <= diaMax + 5) {
+    return {
+      label: 'Normal Alta',
+      color: 'text-amber-500',
+      recommendation: 'Monitorear ingesta de sodio',
+    };
+  }
+
+  return {
+    label: 'Elevada',
+    color: 'text-red-500',
+    recommendation: 'Consultar con tu médico',
+  };
 }

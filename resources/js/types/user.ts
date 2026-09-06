@@ -126,3 +126,9 @@ export interface HistoryModalProps {
   onClose: () => void;
   readings: Reading[];
 }
+
+export interface TrendsScreenProps {
+  readings: Reading[];
+  patientProfile: PatientProfile | null;
+  onBack: () => void;
+}
