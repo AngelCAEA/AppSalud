@@ -47,5 +47,8 @@ php artisan route:clear
 echo "==> Corriendo migraciones..."
 php artisan migrate --force || true
 
+echo "==> Iniciando scheduler en background..."
+php artisan schedule:work &
+
 echo "==> Iniciando servidor..."
 exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
