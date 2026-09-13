@@ -33,12 +33,6 @@ Este es el template que se auto-rellena cuando creas un nuevo PR. Es un template
 10. **Screenshots** - Para cambios visuales
 11. **Links relacionados** - References
 
-### Template Genérico Alternativo
-
-**Archivo:** `PULL_REQUEST_TEMPLATE_GENERIC.md`
-
-Una copia del template principal. Úsalo como referencia o si necesitas una versión alternativa.
-
 ---
 
 ## 🚀 Cómo Usar
