@@ -37,25 +37,22 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-       
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'csrf_token' => csrf_token(),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user()? [
-                    'id'                => $request->user()->id,
-                    'name'              => $request->user()->name,
-                    'email'             => $request->user()->email,
-                    'role_id'           => (int) $request->user()->getAttributeValue('role_id'), // ← agrega esto
-                    'status'            => $request->user()->status,
-                    'email_verified_at' => $request->user()->email_verified_at,
-                    'created_at'        => $request->user()->created_at,
-                    'updated_at'        => $request->user()->updated_at,
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'role_id' => (int) $request->user()->role_id,
+                    'status' => $request->user()->status,
                 ] : null,
             ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
 }
