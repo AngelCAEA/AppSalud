@@ -34,7 +34,9 @@ Route::get('/measurement-contexts', [MeasurementContextController::class, 'index
 
 // Endpoints autenticados para registros de salud
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/health-records', [HealthRecordsController::class, 'store'])->name('health-records.store');
+    Route::post('/health-records', [HealthRecordsController::class, 'store'])
+        ->middleware('throttle:60,1')
+        ->name('health-records.store');
     Route::get('/health-records', [HealthRecordsController::class, 'index'])->name('health-records.index');
     Route::get('/health-records/{id}', [HealthRecordsController::class, 'show'])->name('health-records.show');
     Route::delete('/health-records/{id}', [HealthRecordsController::class, 'destroy'])->name('health-records.destroy');
