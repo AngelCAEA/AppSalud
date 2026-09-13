@@ -27,10 +27,10 @@ class HealthRecordsController extends Controller
         try {
             $validated = $request->validate([
                 'type' => 'required|in:glucose,blood_pressure',
-                'glucose_value' => 'nullable|numeric|min:20|max:600',
-                'systolic' => 'nullable|numeric|min:40|max:300',
-                'diastolic' => 'nullable|numeric|min:20|max:200',
-                'pulse' => 'nullable|numeric|min:20|max:200',
+                'glucose_value' => 'nullable|numeric|min:40|max:400',
+                'systolic' => 'nullable|numeric|min:60|max:250',
+                'diastolic' => 'nullable|numeric|min:30|max:150',
+                'pulse' => 'nullable|numeric|min:30|max:200',
                 'context_id' => 'nullable|numeric|exists:measurement_contexts,id',
             ]);
 
@@ -51,7 +51,7 @@ class HealthRecordsController extends Controller
                 'diastolic' => $diastolicValue,
                 'pulse' => $pulseValue,
                 'context_id' => $contextId,
-                'recorded_at' => now(),
+                'recorded_at' => now('America/Mexico_City'),
             ]);
 
             // Refrescar para obtener los valores generados por la BD (created_at)
@@ -63,9 +63,10 @@ class HealthRecordsController extends Controller
                 'data' => $healthRecord,
             ], 200);
         } catch (\Exception $e) {
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error al guardar el registro: ' . $e->getMessage()
+                'message' => 'Error al procesar la solicitud. Por favor, intenta de nuevo.'
             ], 500);
         }
     }

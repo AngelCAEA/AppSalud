@@ -10,22 +10,23 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
-class ReportsController extends Controller{
-
-    public function index(Request $request){    
+class ReportsController extends Controller
+{
+    public function index(Request $request)
+    {
         return Inertia::render('reports');
     }
 
     /**
      * Obtener lista simple de pacientes asignados al clínico autenticado
      * para el selector/dropdown en el frontend
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getPatientsList(Request $request)
     {
         $clinicianId = Auth::id();
-        
+
         $patients = PatientClinician::where('clinician_id', $clinicianId)
             ->with('patient')
             ->get()
@@ -36,11 +37,31 @@ class ReportsController extends Controller{
                     'name' => $patient->name,
                 ];
             });
-        
+
         return response()->json([
             'success' => true,
             'data' => $patients->values(),
         ]);
+    }
+
+    /**
+     * Validar que el paciente está asignado al clínico autenticado
+     */
+    private function validatePatientAccess(?int $patientId): void
+    {
+        if (!$patientId) {
+            return;
+        }
+
+        $clinicianId = Auth::id();
+        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
+            ->pluck('patient_id')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
+
+        if (!in_array((int) $patientId, $patientIds, true)) {
+            abort(403, 'Paciente no asignado');
+        }
     }
 
     /**
@@ -59,21 +80,20 @@ class ReportsController extends Controller{
      */
     public function getAssignedPatients(Request $request)
     {
-        $clinicianId       = Auth::id();
+        $clinicianId = Auth::id();
         $selectedPatientId = $request->query('patientId');
-        $dateFrom          = $request->query('dateFrom');
-        $dateTo            = $request->query('dateTo');
+        $dateFrom = $request->query('dateFrom');
+        $dateTo = $request->query('dateTo');
 
         // Obtener IDs de pacientes asignados al clínico
         $patientIds = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
+            ->map(fn($id) => (int) $id)
             ->toArray();
 
-        // Si se especifica un paciente, verificar que esté asignado y filtrar
+        // Si se especifica un paciente, validar acceso
         if ($selectedPatientId) {
-            if (!in_array((int) $selectedPatientId, $patientIds)) {
-                return response()->json(['success' => false, 'message' => 'Paciente no asignado'], 403);
-            }
+            $this->validatePatientAccess((int) $selectedPatientId);
             $patientIds = [(int) $selectedPatientId];
         }
 
@@ -169,33 +189,29 @@ class ReportsController extends Controller{
 
     /**
      * Obtener resumen estadístico de los pacientes asignados al doctor/enfermero autenticado
-     * 
+     *
      * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
      * Si patientId está especificado, devuelve estadísticas de solo ese paciente
      */
     public function getSummary(Request $request)
     {
         $clinicianId = Auth::id();
-        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
-        
+        $selectedPatientId = $request->query('patientId');
+
         // Obtener fechas de filtro
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
-        
+
         // Obtener todos los pacientes asignados al clínico
-        $query = PatientClinician::where('clinician_id', $clinicianId)
+        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
+            ->map(fn($id) => (int) $id)
             ->toArray();
-        
-        // Si se especifica un patientId, verificar que el paciente esté asignado y filtrar
+
+        // Si se especifica un patientId, validar acceso
         if ($selectedPatientId) {
-            if (!in_array($selectedPatientId, $query)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Paciente no asignado',
-                ], 403);
-            }
-            $query = [$selectedPatientId];
+            $this->validatePatientAccess((int) $selectedPatientId);
+            $patientIds = [(int) $selectedPatientId];
         }
         
         $patientIds = $query;
@@ -289,36 +305,30 @@ class ReportsController extends Controller{
     /**
      * Obtener todos los registros de salud (mediciones) de los pacientes
      * asignados al doctor/enfermero autenticado, con filtrado por fechas
-     * 
+     *
      * Puede filtrar por un paciente específico mediante el parámetro 'patientId'
      * Si patientId está especificado, devuelve solo mediciones de ese paciente
      */
     public function getMeasurements(Request $request)
     {
         $clinicianId = Auth::id();
-        $selectedPatientId = $request->query('patientId'); // Obtener el paciente seleccionado si existe
-        
+        $selectedPatientId = $request->query('patientId');
+
         // Obtener fechas de filtro
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');
-        
+
         // Obtener IDs de pacientes asignados al clínico
-        $query = PatientClinician::where('clinician_id', $clinicianId)
+        $patientIds = PatientClinician::where('clinician_id', $clinicianId)
             ->pluck('patient_id')
+            ->map(fn($id) => (int) $id)
             ->toArray();
-        
-        // Si se especifica un patientId, verificar que esté asignado y filtrar
+
+        // Si se especifica un patientId, validar acceso
         if ($selectedPatientId) {
-            if (!in_array($selectedPatientId, $query)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Paciente no asignado',
-                ], 403);
-            }
-            $query = [$selectedPatientId];
+            $this->validatePatientAccess((int) $selectedPatientId);
+            $patientIds = [(int) $selectedPatientId];
         }
-        
-        $patientIds = $query;
         
         if (empty($patientIds)) {
             return response()->json([

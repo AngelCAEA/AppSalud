@@ -13,10 +13,10 @@ class RoleMiddleware {
         }
 
         $user = Auth::user();
-        $roleId = (string) $user->role_id;
+        $roleId = (int) $user->role_id;
 
         // Admin role (3) always has access
-        if ($roleId === '3') {
+        if ($roleId === 3) {
             return $next($request);
         }
 
@@ -24,7 +24,10 @@ class RoleMiddleware {
             return $next($request);
         }
 
-        if (in_array($roleId, $roles, true)) {
+        // Convert expected roles to int for consistent type comparison
+        $rolesInt = array_map(fn($role) => (int) $role, $roles);
+
+        if (in_array($roleId, $rolesInt, true)) {
             return $next($request);
         }
 
