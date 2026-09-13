@@ -63,10 +63,6 @@ class HealthRecordsController extends Controller
                 'data' => $healthRecord,
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Health record creation failed', [
-                'user_id' => Auth::id(),
-                'exception' => $e->getMessage(),
-            ]);
 
             return response()->json([
                 'success' => false,
