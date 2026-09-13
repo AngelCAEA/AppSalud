@@ -1,106 +1,235 @@
-Laravel 11 Herd 
-Descargar Laravel herd con lo servicios
-https://herd.laravel.com
+# 🏥 AppSalud - Sistema de Monitoreo de Salud
 
-* Docker
+Sistema integral de telemedicina para monitoreo de glucosa y presión arterial, conectando pacientes con médicos y administradores en una plataforma segura y escalable.
 
-Este proyecto contiene una aplicación Laravel configurada para ejecutarse en contenedores Docker.
+## 📋 Contenido Rápido
 
-* Características
+- Descripción del proyecto
+- Stack tecnológico (Laravel 12 + React 19)
+- Estructura de carpetas
+- Roles y permisos (Paciente, Médico, Admin)
+- Instalación local con Docker
+- Despliegue en Render
+- Documentación completa
 
-Laravel con PHP 8.4
-Nginx como servidor web
-Postgreqsl 16 como base de datos
-Redis para cache y sesiones
-Entorno de desarrollo optimizado
-React para las vistas 
+## Descripción del Proyecto
 
-* Prerrequisitos
+**AppSalud** es una aplicación web moderna para monitoreo remoto de pacientes con enfermedades crónicas (diabetes e hipertensión).
 
-Docker
-Docker Compose
-Git
+### Funcionalidades Principales
 
-1. Construir y ejecutar los contenedores en la terminal VSCODE 
+**Para Pacientes:**
+- Dashboard con últimas mediciones
+- Registro de glucosa, presión arterial y pulso
+- Histórico completo con filtros
+- Análisis de tendencias
+- Perfil de salud personalizado
 
-    docker-compose up --build -d
+**Para Médicos:**
+- Panel de pacientes asignados
+- Clasificación automática por riesgo
+- Cálculo de TiR (Tiempo en Rango)
+- Reportes detallados
+- Configuración de rangos personalizados
 
-2. Configurar Laravel dentro del contenedor
+**Para Administradores:**
+- Gestión de usuarios
+- Asignación de roles
+- Auditoría de cambios
+- Monitoreo global
 
-    2.1.  Ejecuta dentro del contenedor de la app:
+## Stack Tecnológico
 
-        docker exec -it tourcorridas-app bash
-    
-    2.2. Dentro del contenedor:
+| Componente | Tecnología |
+|-----------|-----------|
+| Backend | Laravel 12, PHP 8.2+ |
+| Base de Datos | PostgreSQL 16 |
+| Frontend | React 19, TypeScript |
+| Adaptador | Inertia.js 2.1 |
+| Estilos | Tailwind CSS 4 |
+| Componentes UI | Radix UI |
+| Gráficas | Recharts |
+| Bundler | Vite 7 |
+| DevOps | Docker, Render |
 
-        php artisan key:generate
-        php artisan migrate
-        php artisan storage:link
-        php artisan optimizexs
+## Estructura de Carpetas
 
-        npm install
-        npm run dev (ejecutar en desarrollo)
-        npm run build (compilar al terminar de desarrollar)
+```
+AppSalud/
+├── app/                    # Backend Laravel
+│   ├── Http/Controllers/   # Controladores
+│   ├── Models/             # Modelos BD
+│   ├── Services/           # Servicios
+│   └── Http/Middleware/    # Middlewares
+├── database/               # Migraciones y seeders
+├── resources/js/           # Frontend React
+│   ├── pages/              # Páginas
+│   └── components/         # Componentes
+├── routes/                 # Rutas
+├── config/                 # Configuración
+├── docker-compose.yml      # Orquestación
+├── vite.config.ts          # Configuración Vite
+└── README.md               # Este archivo
+```
 
-3. Verifica que los contenedores estén activos
+## Roles y Permisos
 
-    docker ps
+### 👤 Paciente (Rol 1)
+- Ruta: `/pacient`
+- Ver dashboard personal
+- Registrar mediciones
+- Ver histórico propio
 
-4. Acceder a la aplicación
+### 👨‍⚕️ Médico (Rol 2)
+- Rutas: `/users`, `/reports`, `/configuration`
+- Ver pacientes asignados
+- Generar reportes
+- Configurar perfiles de pacientes
 
-    Laravel (PHP) → http://localhost (si usas Herd, puedes desactivarlo para evitar conflicto)
-    Vite (frontend hot reload) → http://localhost:5173
-    PostgreSQL → localhost:5432 (usuario: laravel, password: appsalud)
-    
-    NOTA: Si aparece una pantalla negra el entrar al link dentro del contenedor escribir lo siguiente:
-            docker exec -it tourcorridas-nginx curl http://localhost
+### 🔑 Administrador (Rol 3)
+- Rutas: `/dashboard`, `/roles`
+- Gestionar usuarios
+- Asignar roles
+- Ver auditoría
 
+## Instalación Local
 
-Comandos útiles 
+### Requisitos
+- Docker & Docker Compose
+- Git
 
-Acción	                        Comando
-Levantar contenedores	        docker compose up -d
-Detenerlos	                    docker compose down
-Ver logs	                    docker compose logs -f
-Entrar al contenedor PHP	    docker exec -it tourcorridas-app bash
-Reiniciar solo la base	        docker compose restart db
+### Pasos Rápidos
 
-* Localmente
+```bash
+# Clonar
+git clone https://github.com/AngelCAEA/AppSalud.git
+cd AppSalud
 
-Base de datos postgresql 
+# Configurar
+cp .env.example .env
 
-1. Descargar e instalar postgresql (MAC)
+# Instalar dependencias
+docker run --rm -v "$(pwd)":/var/www/html -w /var/www/html \
+  laravelsail/php82-composer:latest composer install --ignore-platform-reqs
 
-    brew install postgresql
+# Generar clave
+./vendor/bin/sail artisan key:generate
 
-2. Configurar el PATH después de instalar 
+# Levantar
+docker-compose up -d
 
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+# Migraciones
+docker-compose exec app php artisan migrate:fresh --seed
 
-3. Iniciar el servicio
-    
-    brew services start postgresql
+# Assets
+docker-compose exec app npm install
+docker-compose exec app npm run dev
+```
 
-3. Crea la base de datos y el usuario
+Acceder a: http://localhost:8000
 
-    createdb appsalud
-    createuser laravel
+### Credenciales de Prueba
 
-    # Acceder a PostgreSQL
-    psql postgres
+```
+PACIENTE: paciente@example.com / password
+MÉDICO: doctor@example.com / password
+ADMIN: admin@example.com / password
+```
 
-    # Dentro de psql, configurar la contraseña:
-    ALTER USER laravel WITH PASSWORD 'laravel';
-    GRANT ALL PRIVILEGES ON DATABASE appsalud TO laravel;
+## Despliegue en Render
 
-4. Ejecutar las migraciones
-    
-    # Ejecutar todas las migraciones
-    php artisan migrate
+### 1. Preparar Repositorio
+```bash
+git push origin main
+```
 
-    # Ver el estado de las migraciones
-    php artisan migrate:status
-    
-# Acceder a PostgreSQL
-psql -h 127.0.0.1 -U laravel -d appsalud
+### 2. Crear en Render
+- Conectar GitHub
+- Seleccionar repositorio
+- Runtime: Docker
+
+### 3. Agregar Base de Datos
+- PostgreSQL en Render
+- Copiar credenciales
+
+### 4. Variables de Entorno
+```
+APP_KEY=base64:...
+DB_HOST=generado.render.com
+DB_PASSWORD=generado
+```
+
+### 5. Migraciones
+```bash
+php artisan migrate --force
+```
+
+## Comandos Útiles
+
+```bash
+# Logs en tiempo real
+docker-compose logs -f app
+
+# Terminal del contenedor
+docker-compose exec app bash
+
+# Migraciones
+docker-compose exec app php artisan migrate
+
+# Tests
+docker-compose exec app php artisan test
+
+# Detener
+docker-compose down
+```
+
+## Documentación Completa
+
+Para información más detallada:
+
+- **[📐 docs/ARQUITECTURA.md](./docs/ARQUITECTURA.md)**
+  - Diagrama de arquitectura
+  - Flujo de datos
+  - Relaciones entre modelos
+  - Explicación de cada capa
+
+- **[🔒 docs/SEGURIDAD.md](./docs/SEGURIDAD.md)**
+  - 30 problemas de seguridad identificados
+  - Soluciones detalladas
+  - Prioridades (Alta/Media/Baja)
+  - Ejemplos de código
+
+- **[🚀 docs/MEJORAS_FUTURAS.md](./docs/MEJORAS_FUTURAS.md)**
+  - Plan de acción de 3 días
+  - Optimizaciones de rendimiento
+  - Features por implementar
+
+## Configuración Importante
+
+### Timezone
+```env
+APP_TIMEZONE=America/Mexico_City
+```
+
+### Base de Datos
+```env
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_DATABASE=appsalud
+```
+
+### Mail (Desarrollo)
+```env
+MAIL_DRIVER=smtp
+MAIL_HOST=mailhog
+MAIL_PORT=1025
+```
+
+## Contacto
+
+- GitHub: https://github.com/AngelCAEA/AppSalud
+- Issues: [Reportar bugs](https://github.com/AngelCAEA/AppSalud/issues)
+
+---
+
+**Versión:** 1.0.0 | **Última actualización:** 13 de Septiembre, 2026
