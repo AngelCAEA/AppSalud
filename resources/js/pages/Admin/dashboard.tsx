@@ -14,14 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import  UserTable  from '@/pages/Admin/UserTable';
+
 import { toast } from 'sonner';
 import { getUsers } from '@/hooks/dashboard_admin/useTableUser'
 
@@ -195,101 +189,15 @@ export default function Dashboard() {
                 <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
                     {/* Tabla de Gestión de Usuarios */}
                     <Card className="rounded-xl border-gray-200">
-                        <CardContent className="p-6">
-                        <div className="mb-6">
-                            <h2 className="text-black dark:text-white">Gestión de Usuarios</h2>
-                            <p className="text-sm text-gray-500 mt-1">Administra roles y permisos de usuarios</p>
-                        </div>
-
-                        <div className="rounded-lg border border-gray-200 overflow-hidden">
-                            <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50">
-                                <TableHead className="text-gray-600">Usuario</TableHead>
-                                <TableHead className="text-gray-600">Email</TableHead>
-                                <TableHead className="text-gray-600">Fecha de Registro</TableHead>
-                                <TableHead className="text-gray-600">Estatus</TableHead>
-                                <TableHead className="text-gray-600">Rol</TableHead>
-                                <TableHead className="text-gray-600 text-right">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-4">Cargando usuarios...</TableCell>
-                                    </TableRow>
-                                ) : users.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-4">No hay usuarios registrados</TableCell>
-                                    </TableRow>
-                                ) : (
-                                    users.map((user) => {
-                                        const statusDisplay = getStatusDisplay(user.status);
-                                        return (
-                                            <TableRow key={user.id} className="hover:bg-gray-50">
-                                                <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="w-10 h-10">
-                                                    <AvatarFallback className="bg-blue-100 text-blue-600">
-                                                        {getInitials(user.name)}
-                                                    </AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="text-gray-900">{user.name}</span>
-                                                </div>
-                                                </TableCell>
-                                                <TableCell className="text-gray-600">{user.email}</TableCell>
-                                                <TableCell className="text-gray-600">{formatDate(user.created_at)}</TableCell>
-                                                <TableCell>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={`rounded-full ${statusDisplay.color}`}
-                                                >
-                                                    {statusDisplay.text}
-                                                </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        className="rounded-lg border-gray-200 text-gray-700 hover:bg-gray-50"
-                                                    >
-                                                        {user.role_name || 'Asignar Rol'}
-                                                        <MoreVertical className="w-4 h-4 ml-2" />
-                                                    </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="start" className="rounded-lg">
-                                                        {roles.map(role => (
-                                                            <DropdownMenuItem
-                                                                key={role.id}
-                                                                onClick={() => handleAssignRole(user.id, role.id)}
-                                                                className="rounded-md cursor-pointer"
-                                                            >
-                                                                {role.name}
-                                                            </DropdownMenuItem>
-                                                        ))}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                {user.status === false || user.status === null ? (
-                                                    <Button
-                                                    onClick={() => handleActivateUser(user.id)}
-                                                    className="rounded-lg bg-green-600 hover:bg-green-700 text-white"
-                                                    size="sm"
-                                                    >
-                                                    <Power className="w-4 h-4 mr-2" />
-                                                    Activar
-                                                    </Button>
-                                                ) : null}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })
-                                )}
-                            </TableBody>
-                            </Table>
-                        </div>
+                        <CardContent>
+                            <h1 className="text-black dark:text-white mb-2">Gestión de Usuarios</h1>
+                      
+                            <div className="rounded-lg border border-gray-200 overflow-hidden">
+                                <UserTable
+                                    data={users}
+                                    isLoading={loading}
+                                />
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
