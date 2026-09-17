@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { updateUserStatus, assignRole } from '@/routes';
+import { User, Role } from '@/types/user';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { getUsers } from '@/hooks/dashboard_admin/useTableUser'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -31,20 +32,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  created_at: string;
-  status: boolean | null;
-  role_id: number | null;
-  role_name: string | null;
-};
-
-type Role = {
-  id: number;
-  name: string;
-};
 
 type ApiResponse = {
     status: boolean;
@@ -52,28 +39,15 @@ type ApiResponse = {
 };
 
 export default function Dashboard() {
+
+    const {users, roles, loading, error } = getUsers();
     const page = usePage();
     const csrfToken = (page.props.csrf_token as string) || 
                       document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
-    const [users, setUsers] = useState<User[]>([]);
-    const [roles, setRoles] = useState<Role[]>([]);
-    const [loading, setLoading] = useState(true);
 
-    // Obtener usuarios y roles de la API
-    useEffect(() => {
-        fetch('/dashboard/users')
-            .then(res => res.json())
-            .then(data => {
-                setUsers(data.users);
-                setRoles(data.roles);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Error fetching users:', err);
-                setLoading(false);
-            });
-    }, []);
+
+   
 
     // Calcular métricas
     const usersWithoutRole = users.filter((u) => u.role_id === null).length;

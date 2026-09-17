@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class DashboardController extends Controller
-{
+class DashboardController extends Controller{
     /**
-     * Obtener todos los usuarios con sus roles
+     * Obtener todos los usuarios con sus roles para la tabla del dashboard del administrador
+     * Retorna: JSON status true con los usuarios que tiene el sistema, status false con el mensaje.
      */
-    public function getUsers()
-    {
+    public function getUsers(){
+
+        try {
         $users = User::with('role')->get()->map(function ($user) {
             return [
                 'id' => $user->id,
@@ -27,9 +29,17 @@ class DashboardController extends Controller
         });
 
         return response()->json([
+            'status'=> true,
             'users' => $users,
             'roles' => Role::all(['id', 'name']),
         ]);
+        }catch(Exception $error){
+            return  response()->json([
+                'status' => false,
+                'message' => 'Hubo un error al obtener a los usuarios ' . $error-> getMessage()
+
+            ]);
+        }
     }
 
     /**
@@ -71,6 +81,6 @@ class DashboardController extends Controller
      */
     public function index() {
 
-        return Inertia::render('dashboard');
+        return Inertia::render('dashboardAdmin/dashboard');
     }
 }
