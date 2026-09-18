@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head} from '@inertiajs/react';
 import { UserX, UserMinus, Clock } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import  UserTable  from '@/pages/Admin/UserTable';
 import { getUsers } from '@/hooks/dashboardAdmin/useTableUser'
 
@@ -87,8 +87,12 @@ export default function Dashboard() {
                 <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl md:min-h-min">
                     {/* Tabla de Gestión de Usuarios */}
                     <Card className="rounded-xl border-gray-200">
+                        <CardHeader>
+                            <CardTitle>
+                                <h1 className="text-black dark:text-white">Gestión de Usuarios</h1>
+                            </CardTitle>
+                        </CardHeader>
                         <CardContent>
-                            <h1 className="text-black dark:text-white mb-2">Gestión de Usuarios</h1>
                             <div className="rounded-lg border border-gray-200 overflow-hidden">
                                 <UserTable
                                     data={users}
