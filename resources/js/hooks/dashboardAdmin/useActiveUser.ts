@@ -2,21 +2,18 @@
  * Hook para poder desactivar y activar un usuario en el sistema.
  */
 import { route } from 'ziggy-js';
-import { useToken } from '@/hooks/use-csrf';
 import { toast } from 'sonner';
 import { Response } from '@/types/dashboard';
 
-export async function activateUser({ userId }: { userId:number }){
+export async function toggleUserStatus({ userId, status, csrfToken }: { userId: number; status: boolean; csrfToken: string }){
     try {
-        const csrfToken = useToken();
-
         const response = await fetch(route('updateUserStatus', { user: userId }),{
             method: 'PATCH',
             headers: {
                 'Content-Type' : 'application/json',
                 'X-CSRF-TOKEN' : csrfToken
             },
-            body: JSON.stringify({ status: true })
+            body: JSON.stringify({ status })
         });
 
         if (!response.ok){

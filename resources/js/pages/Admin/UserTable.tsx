@@ -10,10 +10,11 @@ import {
 import { COLUMNS } from '@/pages/Admin/TableColumns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TableProps } from '@/types/dashboard'
-import { Columns } from 'lucide-react';
+import { useToken } from '@/hooks/use-csrf';
 
-export default function UserTable({ data, isLoading, error }: TableProps) {
+export default function UserTable({ data, isLoading, error, roles }: TableProps) {
 
+  const csrfToken = useToken();
   const skeletonCount = data.length;
 
   return (
@@ -21,7 +22,7 @@ export default function UserTable({ data, isLoading, error }: TableProps) {
       <TableHeader>
         <TableRow>
           {COLUMNS.map((col)=>(
-            <TableHead className='bg-secondary' key={col.label}>{col.label}</TableHead>
+            <TableHead className="bg-secondary" key={col.label}>{col.label}</TableHead>
           ))}
         </TableRow>
       </TableHeader>
@@ -45,15 +46,15 @@ export default function UserTable({ data, isLoading, error }: TableProps) {
             data.map((item: User) => (
             <TableRow key={item.id}>{COLUMNS.map((col) => (
               <TableCell key={col.label}>
-                {col.renderCell(item)}
+                {col.renderCell(item, csrfToken, roles)}
               </TableCell>))}
             </TableRow>
             ))
           ):(
             <TableRow>
               <TableCell
-              colSpan={Columns.length}
-              className='h-24 text-center text-muted-foreground'>
+              colSpan={COLUMNS.length}
+              className='h-24 text-center text-[#64748b]'>
                 {error || 'Sin resultados'}
               </TableCell>
             </TableRow>
@@ -62,5 +63,3 @@ export default function UserTable({ data, isLoading, error }: TableProps) {
     </Table>
   );
 }
-
-

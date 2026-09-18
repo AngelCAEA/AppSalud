@@ -14,6 +14,7 @@ export interface getUsersResponse {
 
 export interface TableProps {
     data: User[];
+    roles: Role[];
     isLoading: boolean;
     error: string;
 }
