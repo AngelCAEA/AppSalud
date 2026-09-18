@@ -45,34 +45,30 @@ class DashboardController extends Controller{
     /**
      * Actualizar el estado del usuario
      */
-    public function updateUserStatus(Request $request, User $user)
-    {
+    public function updateUserStatus(Request $request, User $user){
         $validated = $request->validate([
             'status' => 'required|boolean',
         ]);
         try {
             $user->update(['status' => $validated['status']]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => 'Error al actualizar el usuario ' . $e->getMessage()], 500);
         }
-
         return response()->json(['status' => true, 'message' => 'Usuario actualizado'], 200);
     }
 
     /**
      * Asignar rol al usuario
      */
-    public function assignRole(Request $request, User $user)
-    {
+    public function assignRole(Request $request, User $user){
         $validated = $request->validate([
             'role_id' => 'required|exists:role,id',
         ]);
         try {
             $user->update(['role_id' => $validated['role_id']]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => 'Error al asignar rol ' . $e->getMessage()], 500);
         }
-
         return response()->json(['status' => true, 'message' => 'Rol asignado correctamente'], 200);
     }
 

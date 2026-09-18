@@ -4,7 +4,7 @@
 import { getUsersResponse } from '@/types/dashboard';
 import { User, Role } from '@/types/user';
 import { route } from 'ziggy-js';
-import { useToken } from '@/hooks/use-csrf'
+import { useToken } from '@/hooks/use-csrf';
 import { useEffect, useState } from 'react';
 
 export function getUsers(){

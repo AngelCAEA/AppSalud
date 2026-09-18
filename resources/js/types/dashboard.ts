@@ -15,4 +15,11 @@ export interface getUsersResponse {
 export interface TableProps {
     data: User[];
     isLoading: boolean;
+    error: string;
 }
+
+export interface Response {
+    status: boolean;
+    message: string;
+}
+

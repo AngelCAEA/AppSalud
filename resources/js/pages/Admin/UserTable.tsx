@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TableProps } from '@/types/dashboard'
 import { Columns } from 'lucide-react';
 
-export default function UserTable({ data, isLoading }: TableProps) {
+export default function UserTable({ data, isLoading, error }: TableProps) {
 
   const skeletonCount = data.length;
 
@@ -21,7 +21,7 @@ export default function UserTable({ data, isLoading }: TableProps) {
       <TableHeader>
         <TableRow>
           {COLUMNS.map((col)=>(
-            <TableHead key={col.label}>{col.label}</TableHead>
+            <TableHead className='bg-secondary' key={col.label}>{col.label}</TableHead>
           ))}
         </TableRow>
       </TableHeader>
@@ -43,19 +43,18 @@ export default function UserTable({ data, isLoading }: TableProps) {
             ))
           ): data.length > 0 ? (
             data.map((item: User) => (
-              <TableRow key={item.id}>{COLUMNS.map((col) => (
-                  <TableCell key={col.label}>
-                    {col.renderCell(item)}
-                  </TableCell>
-                  ))}
-              </TableRow>
+            <TableRow key={item.id}>{COLUMNS.map((col) => (
+              <TableCell key={col.label}>
+                {col.renderCell(item)}
+              </TableCell>))}
+            </TableRow>
             ))
           ):(
             <TableRow>
               <TableCell
               colSpan={Columns.length}
               className='h-24 text-center text-muted-foreground'>
-                Sin resultados
+                {error || 'Sin resultados'}
               </TableCell>
             </TableRow>
           )}
