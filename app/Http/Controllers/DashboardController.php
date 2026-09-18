@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use Exception;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class DashboardController extends Controller
-{
+class DashboardController extends Controller{
     /**
-     * Obtener todos los usuarios con sus roles
+     * Obtener todos los usuarios con sus roles para la tabla del dashboard del administrador
+     * Retorna: JSON status true con los usuarios que tiene el sistema, status false con el mensaje.
      */
-    public function getUsers()
-    {
+    public function getUsers(){
+
+        try {
         $users = User::with('role')->get()->map(function ($user) {
             return [
                 'id' => $user->id,
@@ -27,42 +29,46 @@ class DashboardController extends Controller
         });
 
         return response()->json([
+            'status'=> true,
             'users' => $users,
             'roles' => Role::all(['id', 'name']),
         ]);
+        }catch(Exception $error){
+            return  response()->json([
+                'status' => false,
+                'message' => 'Hubo un error al obtener a los usuarios ' . $error-> getMessage()
+
+            ]);
+        }
     }
 
     /**
      * Actualizar el estado del usuario
      */
-    public function updateUserStatus(Request $request, User $user)
-    {
+    public function updateUserStatus(Request $request, User $user){
         $validated = $request->validate([
             'status' => 'required|boolean',
         ]);
         try {
             $user->update(['status' => $validated['status']]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => 'Error al actualizar el usuario ' . $e->getMessage()], 500);
         }
-
         return response()->json(['status' => true, 'message' => 'Usuario actualizado'], 200);
     }
 
     /**
      * Asignar rol al usuario
      */
-    public function assignRole(Request $request, User $user)
-    {
+    public function assignRole(Request $request, User $user){
         $validated = $request->validate([
             'role_id' => 'required|exists:role,id',
         ]);
         try {
             $user->update(['role_id' => $validated['role_id']]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => 'Error al asignar rol ' . $e->getMessage()], 500);
         }
-
         return response()->json(['status' => true, 'message' => 'Rol asignado correctamente'], 200);
     }
 
@@ -71,6 +77,6 @@ class DashboardController extends Controller
      */
     public function index() {
 
-        return Inertia::render('dashboard');
+        return Inertia::render('Admin/dashboard');
     }
 }

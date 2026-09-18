@@ -13,7 +13,6 @@ export interface PatientProfile {
   created_at: string;
   updated_at: string;
 }
-
 /**
  * Usuario del sistema con datos de riesgo y último registro procesado.
  */
@@ -22,17 +21,25 @@ export interface User {
   name: string;
   email: string;
   role_id: number;
+  role_name: string;
+  created_at: string;
   status: boolean;
   patient_profile?: PatientProfile;
-  riskLevel: string;
-  tirPercentage: number;
-  lastRecord: { value: string | null; date: string | null } | null;
+  riskLevel?: string;
+  tirPercentage?: number;
+  lastRecord?: { value: string | null; date: string | null } | null;
 }
 
 /**
  * Filtros disponibles para el listado de pacientes.
  */
 export type PatientsFilters = 'all' | 'high' | 'unstable' | 'noRecord';
+
+/**  Rol del usuario en el sistema */
+export interface Role {
+  id: number;
+  name: string;
+};
 
 /**
  * Estructura de datos de la página de usuarios/pacientes,
