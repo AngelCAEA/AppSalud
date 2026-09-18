@@ -60,10 +60,10 @@ export default function Dashboard() {
                     <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                         {/* Usuarios sin Rol */}
                         <Card className="rounded-xl border border-[rgba(255,255,255,0.08)] border-l-[3px] border-l-[#ef4444]">
-                            <CardContent className="p-6">
+                            <CardContent>
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <p className="text-sm text-[#64748b] mb-2">Usuarios sin Rol</p>
+                                        <p className="text-sm text-[#64748b] mb-2">Usuarios sin rol</p>
                                         <p className="text-4xl font-semibold text-[#ef4444]">{usersWithoutRole}</p>
                                     </div>
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[rgba(239,68,68,0.15)]">
@@ -76,10 +76,10 @@ export default function Dashboard() {
 
                         {/* Cuentas Inactivas */}
                         <Card className="rounded-xl border border-[rgba(255,255,255,0.08)] border-l-[3px] border-l-[#f59e0b]">
-                            <CardContent className="p-6">
+                            <CardContent>
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <p className="text-sm text-[#64748b] mb-2">Cuentas Inactivas</p>
+                                        <p className="text-sm text-[#64748b] mb-2">Cuentas inactivas</p>
                                         <p className="text-4xl font-semibold text-[#f59e0b]">{inactiveAccounts}</p>
                                     </div>
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[rgba(245,158,11,0.15)]">
@@ -92,10 +92,10 @@ export default function Dashboard() {
 
                         {/* Registros Recientes */}
                         <Card className="rounded-xl border border-[rgba(255,255,255,0.08)] border-l-[3px] border-l-[#2563eb]">
-                            <CardContent className="p-6">
+                            <CardContent>
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <p className="text-sm text-[#64748b] mb-2">Registros Recientes</p>
+                                        <p className="text-sm text-[#64748b] mb-2">Registros recientes</p>
                                         <p className="text-4xl font-semibold text-[#60a5fa]">{recentRegistrations}</p>
                                     </div>
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[rgba(37,99,235,0.15)]">
