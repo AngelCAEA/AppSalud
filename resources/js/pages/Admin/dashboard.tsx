@@ -31,7 +31,31 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="min-h-full flex-1">
-                <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
+                <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl ml-6 mr-6">
+                    {/* Header agrupado — responsive */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        {/* Izquierda — descripción */}
+                        <p className="text-gray-500 dark:text-gray-400">
+                            Gestiona usuarios y supervisa la actividad del sistema
+                        </p>
+                        {/* Derecha — píldora y fecha */}
+                        <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 
+                                            text-blue-600 dark:text-blue-400 text-xs px-3 py-1 rounded-full
+                                            border border-blue-200 dark:border-blue-800">
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                Panel de Administrador
+                            </span>
+                            <span className="text-xs text-gray-400">
+                                {new Date().toLocaleDateString('es-MX', {
+                                    weekday: 'long',
+                                    year:    'numeric',
+                                    month:   'long',
+                                    day:     'numeric'
+                                })}
+                            </span>
+                        </div>
+                    </div>
                     {/* Cards de métricas */}
                     <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                         {/* Usuarios sin Rol */}
@@ -84,20 +108,18 @@ export default function Dashboard() {
                     </div>
 
                     {/* Tabla de Gestión de Usuarios */}
-                    <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl md:min-h-min">
-                        <Card className="rounded-xl border border-[rgba(255,255,255,0.08)]">
+                    <div>
+                        <Card className="rounded-xl border">
                             <CardHeader>
                                 <CardTitle>Gestión de Usuarios</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="rounded-lg border border-[rgba(255,255,255,0.08)] overflow-hidden">
-                                    <UserTable
-                                        data={users}
-                                        isLoading={loading}
-                                        error={error}
-                                        roles={roles}
-                                    />
-                                </div>
+                                <UserTable
+                                    data={users}
+                                    isLoading={loading}
+                                    error={error}
+                                    roles={roles}
+                                />
                             </CardContent>
                         </Card>
                     </div>

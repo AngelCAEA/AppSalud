@@ -18,7 +18,7 @@ export default function UserTable({ data, isLoading, error, roles }: TableProps)
   const skeletonCount = data.length;
 
   return (
-    <Table>
+    <Table className='border'>
       <TableHeader>
         <TableRow>
           {COLUMNS.map((col)=>(

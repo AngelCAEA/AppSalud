@@ -2,14 +2,12 @@
  * Hook para asignar el rol a un usuario  del sistema
  */
 import { route } from 'ziggy-js';
-import { useToken } from '@/hooks/use-csrf';
 import { toast } from 'sonner';
 import { Response } from '@/types/dashboard';
 
-export async function assignRol ({userId, roleId}:{userId:number, roleId:number}){
+export async function assignRol ({userId, roleId, csrfToken}:{userId:number, roleId:number, csrfToken: string}){
     try {
-        const csrfToken = useToken();
-
+       
         const response = await fetch(route('assignRole', {user: userId}),{
             method: 'PATCH',
             headers: {

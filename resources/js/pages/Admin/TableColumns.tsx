@@ -1,9 +1,7 @@
 /** Columnas de la tabla de usuarios del dashboard administrador */
 import { ReactNode } from 'react';
 import { User, Role } from '@/types/user';
-import { router } from '@inertiajs/react';
-import { route } from 'ziggy-js';
-import { Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { toggleUserStatus } from '@/hooks/dashboardAdmin/useActiveUser';
 import { assignRol } from '@/hooks/dashboardAdmin/useAssingRole';
 
@@ -81,6 +79,12 @@ export const COLUMNS: Column[] = [
                 </button>
                 <select 
                     value={item.role_id || ''}
+                    onChange={(e) => assignRol({
+                                        roleId:    Number(e.target.value),
+                                        userId:    item.id,
+                                        csrfToken,  
+                                    })}
+                    className='w-full border border-gray-300 rounded bg-white dark:bg-gray-800'
                 >
                     <option value="">Sin asignar un rol</option>
                     {roles.map((rol)=>(
